@@ -6,9 +6,7 @@
   "frontend:build": "npm run build",
   "frontend:dev:watcher": "npm run dev",
   "frontend:dev:serverUrl": "auto",
-  "wailsjsdir": "./frontend/src/lib",
   "author": {
-    "name": "Matias Olivera",
-    "email": "matias.olivera@naranjax.com"
+    "name": "Matias Olivera"
   }
 }

@@ -2,21 +2,17 @@
 
 ## About
 
-Svelte + Tailwind Template for Wails
-Frontend updated to the latest packages and app versions for modern app development.
+This is the official Wails React template.
 
-- @sveltejs/vite-plugin-svelte@2.4.5
-- autoprefixer@10.4.15
-- postcss@8.4.28
-- svelte@4.2.0
-- tailwindcss@3.3.3
-- vite@4.4
+You can configure the project by editing `wails.json`. More information about the project settings can be found
+here: https://wails.io/docs/reference/project-config
 
 ## Live Development
 
-To run in live development mode, run `wails dev` in the project directory. In another terminal, go into the `frontend`
-directory and run `npm run dev`. The frontend dev server will run on http://localhost:34115. Connect to this in your
-browser and connect to your application.
+To run in live development mode, run `wails dev` in the project directory. This will run a Vite development
+server that will provide very fast hot reload of your frontend changes. If you want to develop in a browser
+and have access to your Go methods, there is also a dev server that runs on http://localhost:34115. Connect
+to this in your browser, and you can call your Go code from devtools.
 
 ## Building
 
