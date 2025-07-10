@@ -16,38 +16,18 @@ export default function MenuBar() {
       <div className="flex space-x-4">
         <DropdownMenu>
           <DropdownMenuTrigger className="px-2 py-1 hover:c2-bg-dark rounded outline-none">
-            File
+            R2C2
           </DropdownMenuTrigger>
           <DropdownMenuContent className="c2-bg-panel c2-border border min-w-32">
             <DropdownMenuItem className="hover:c2-bg-dark focus:c2-bg-dark">
               New Session
             </DropdownMenuItem>
             <DropdownMenuItem className="hover:c2-bg-dark focus:c2-bg-dark">
-              Import
-            </DropdownMenuItem>
-            <DropdownMenuItem className="hover:c2-bg-dark focus:c2-bg-dark">
-              Export
+              Preferences
             </DropdownMenuItem>
             <DropdownMenuSeparator className="c2-border" />
             <DropdownMenuItem className="hover:c2-bg-dark focus:c2-bg-dark">
               Exit
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger className="px-2 py-1 hover:c2-bg-dark rounded outline-none">
-            Edit
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="c2-bg-panel c2-border border min-w-32">
-            <DropdownMenuItem className="hover:c2-bg-dark focus:c2-bg-dark">
-              Copy
-            </DropdownMenuItem>
-            <DropdownMenuItem className="hover:c2-bg-dark focus:c2-bg-dark">
-              Paste
-            </DropdownMenuItem>
-            <DropdownMenuItem className="hover:c2-bg-dark focus:c2-bg-dark">
-              Preferences
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -106,7 +86,7 @@ export default function MenuBar() {
           <div className="w-2 h-2 bg-green-400 rounded-full"></div>
           <span className="c2-text-dim">{connectionStatus}</span>
         </span>
-        <span className="c2-text-dim">Server IP: 192.168.1.2</span>
+        <span className="c2-text-dim">192.168.1.2</span>
       </div>
     </div>
   );

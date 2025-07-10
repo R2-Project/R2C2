@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Plus, Terminal, Network, Users, Separator } from "lucide-react";
+import { X, Plus, Terminal, AudioLines, Users, Separator } from "lucide-react";
 
 interface Tab {
   id: string;
@@ -18,22 +18,9 @@ export default function TabBar() {
       active: true,
     },
     {
-      id: "network",
-      name: "Network Map",
-      icon: <Network className="w-3 h-3" />,
-      active: false,
-    },
-    {
-      id: "separator-1",
-      name: "",
-      icon: null,
-      active: false,
-      isSeparator: true,
-    },
-    {
-      id: "sessions",
-      name: "Sessions",
-      icon: <Users className="w-3 h-3" />,
+      id: "listeners",
+      name: "Listeners",
+      icon: <AudioLines className="w-3 h-3" />,
       active: false,
     },
   ]);
@@ -129,6 +116,7 @@ export default function TabBar() {
             </div>
           );
         })}
+        {/*
         <button 
           className="px-3 py-2 c2-text-dim hover:c2-text-accent"
           onClick={addNewTab}
@@ -136,13 +124,7 @@ export default function TabBar() {
         >
           <Plus className="w-4 h-4" />
         </button>
-        <button 
-          className="px-2 py-2 c2-text-dim hover:c2-text-accent"
-          onClick={addSeparator}
-          title="Add separator"
-        >
-          <div className="w-px h-4 bg-current"></div>
-        </button>
+        */}
       </div>
     </div>
   );
