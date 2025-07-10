@@ -5,11 +5,20 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuCheckboxItem
 } from "@/components/ui/dropdown-menu";
+import { Check } from 'lucide-react'
+import NewSession from '@/components/menu/NewSession'
+import { Button } from "@/components/ui/button"
 
 export default function MenuBar() {
   const [connectionStatus, setConnectionStatus] = useState("Connected");
   const [activeSessions, setActiveSessions] = useState(3);
+
+  const handleNewSession = () => {
+    console.log("NEW SESSION")
+    return (<NewSession />)
+  }
 
   return (
     <div className="c2-bg-panel c2-border border-b h-8 flex items-center px-2 text-xs">
@@ -19,8 +28,10 @@ export default function MenuBar() {
             R2C2
           </DropdownMenuTrigger>
           <DropdownMenuContent className="c2-bg-panel c2-border border min-w-32">
-            <DropdownMenuItem className="hover:c2-bg-dark focus:c2-bg-dark">
-              New Session
+            <DropdownMenuItem className="hover:c2-bg-dark focus:c2-bg-dark hover:text-white">
+                <Button onClick={handleNewSession}>
+                  New Session
+                </Button>
             </DropdownMenuItem>
             <DropdownMenuItem className="hover:c2-bg-dark focus:c2-bg-dark">
               Preferences
@@ -37,11 +48,11 @@ export default function MenuBar() {
             View
           </DropdownMenuTrigger>
           <DropdownMenuContent className="c2-bg-panel c2-border border min-w-32">
+            <DropdownMenuCheckboxItem checked={true} className="hover:c2-bg-dark focus:c2-bg-dark">
+              Network Map
+            </DropdownMenuCheckboxItem>
             <DropdownMenuItem className="hover:c2-bg-dark focus:c2-bg-dark">
               Console
-            </DropdownMenuItem>
-            <DropdownMenuItem className="hover:c2-bg-dark focus:c2-bg-dark">
-              Network Map
             </DropdownMenuItem>
             <DropdownMenuItem className="hover:c2-bg-dark focus:c2-bg-dark">
               File Explorer
