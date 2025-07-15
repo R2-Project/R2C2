@@ -5,38 +5,19 @@ import CommandInterface from "@/components/CommandInterface";
 import NetworkMap from "@/components/NetworkMap";
 import StatusBar from "@/components/StatusBar";
 import Clients from "@/components/Clients";
-import { Panel, PanelGroup} from "react-resizable-panels";
+import { Panel, PanelGroup } from "react-resizable-panels";
 import Divider from "@/components/Divider";
-import GoldenLayout from 'golden-layout'
+import GoldenLayout from '@/components/GoldenLayout'
 
 export default function C2Dashboard() {
 
 
-  var myLayout = new GoldenLayout({
-    content: [{
-        type: 'row',
-        content:[{
-            type:'react-component',
-            component: 'test-component',
-            props: { label: 'A' }
-        },{
-            type: 'column',
-            content:[{
-                type:'react-component',
-                component: 'test-component',
-                props: { label: 'B' }
-            },{
-                type:'react-component',
-                component: 'test-component',
-                props: { label: 'C' }
-            }]
-        }]
-    }]
-})
 
   return (
     <div className="flex flex-col h-screen c2-bg-dark c2-text">
       <MenuBar />
+
+      <GoldenLayout />
 
       {/*
       <div className="flex-1 flex overflow-hidden">
