@@ -14,13 +14,10 @@ import { Button } from "@/components/ui/button"
 export default function MenuBar() {
   const [connectionStatus, setConnectionStatus] = useState("Connected");
   const [activeSessions, setActiveSessions] = useState(3);
-
-  const handleNewSession = () => {
-    console.log("NEW SESSION")
-    return (<NewSession />)
-  }
+  const [newSessionDialogOpen, setNewSessionDialogOpen] = useState(false);
 
   return (
+    <>
     <div className="c2-bg-panel c2-border border-b h-8 flex items-center px-2 text-xs">
       <div className="flex space-x-4">
         <DropdownMenu>
@@ -28,10 +25,8 @@ export default function MenuBar() {
             R2C2
           </DropdownMenuTrigger>
           <DropdownMenuContent className="c2-bg-panel c2-border border min-w-32">
-            <DropdownMenuItem className="hover:c2-bg-dark focus:c2-bg-dark hover:text-white">
-                <Button onClick={handleNewSession}>
-                  New Session
-                </Button>
+            <DropdownMenuItem className="hover:c2-bg-dark focus:c2-bg-dark hover:text-white" onClick={() => setNewSessionDialogOpen(true)}>
+              New Session
             </DropdownMenuItem>
             <DropdownMenuItem className="hover:c2-bg-dark focus:c2-bg-dark">
               Preferences
@@ -100,5 +95,8 @@ export default function MenuBar() {
         <span className="c2-text-dim">192.168.1.2</span>
       </div>
     </div>
+
+    <NewSession open={newSessionDialogOpen} onOpenChange={setNewSessionDialogOpen} />
+    </>
   );
 }

@@ -7,12 +7,38 @@ import StatusBar from "@/components/StatusBar";
 import Clients from "@/components/Clients";
 import { Panel, PanelGroup} from "react-resizable-panels";
 import Divider from "@/components/Divider";
+import GoldenLayout from 'golden-layout'
 
 export default function C2Dashboard() {
+
+
+  var myLayout = new GoldenLayout({
+    content: [{
+        type: 'row',
+        content:[{
+            type:'react-component',
+            component: 'test-component',
+            props: { label: 'A' }
+        },{
+            type: 'column',
+            content:[{
+                type:'react-component',
+                component: 'test-component',
+                props: { label: 'B' }
+            },{
+                type:'react-component',
+                component: 'test-component',
+                props: { label: 'C' }
+            }]
+        }]
+    }]
+})
+
   return (
     <div className="flex flex-col h-screen c2-bg-dark c2-text">
       <MenuBar />
 
+      {/*
       <div className="flex-1 flex overflow-hidden">
         <PanelGroup direction="vertical">
           <Panel defaultSize={30} minSize={20}>
@@ -27,6 +53,7 @@ export default function C2Dashboard() {
           </Panel>
         </PanelGroup>
       </div>
+      */}
     </div>
   );
 }

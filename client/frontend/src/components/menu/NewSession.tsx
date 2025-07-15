@@ -1,26 +1,21 @@
 import { useState } from "react"
-import { MoreHorizontal, Settings, Eye, Bell } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { Form, FormLabel, FormItem, FormMessage, FormControl  } from '@/components/ui/form'
 
-export default function NewSession(){
+type Props = {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+};
 
-  const [isDialogOpen, setIsDialogOpen] = useState(true)
+export default function NewSession({open, onOpenChange}: Props){
+  
   const [showPreview, setShowPreview] = useState(true)
   const [enableNotifications, setEnableNotifications] = useState(false)
 
   return (
-    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>New Session Config</DialogTitle>
@@ -30,15 +25,30 @@ export default function NewSession(){
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="space-y-2">
-            <h4 className="font-medium">Current Settings</h4>
-            <div className="text-sm text-muted-foreground space-y-1">
-              <p>Preview: {showPreview ? "Enabled" : "Disabled"}</p>
-              <p>Notifications: {enableNotifications ? "Enabled" : "Disabled"}</p>
-            </div>
+          <Form>
+            <FormItem className="FormField">
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "baseline",
+                  justifyContent: "space-between",
+                }}
+              >
+                <FormLabel className="FormLabel">Email</FormLabel>
+                <FormMessage className="FormMessage">
+                  Please enter your email
+                </FormMessage>
+                <FormMessage className="FormMessage">
+                  Please provide a valid email
+                </FormMessage>
+              </div>
+            </FormItem>
+          </Form>
+
           </div>
         </div>
         <div className="flex justify-end">
-          <Button onClick={() => setIsDialogOpen(false)}>Close</Button>
+          <Button onClick={() => onOpenChange(false)}>Close</Button>
         </div>
       </DialogContent>
     </Dialog>
