@@ -1,40 +1,22 @@
+import React, { useRef } from 'react';
 import MenuBar from "@/components/MenuBar";
-import TabBar from "@/components/TabBar";
-import FileExplorer from "@/components/FileExplorer";
-import CommandInterface from "@/components/CommandInterface";
-import NetworkMap from "@/components/NetworkMap";
-import StatusBar from "@/components/StatusBar";
-import Clients from "@/components/Clients";
-import { Panel, PanelGroup } from "react-resizable-panels";
-import Divider from "@/components/Divider";
-import GoldenLayout from '@/components/GoldenLayout'
+import GoldenLayoutComponent, { GoldenLayoutRef } from '@/components/GoldenLayout';
 
 export default function C2Dashboard() {
+  const layoutRef = useRef<GoldenLayoutRef>(null);
 
-
+  // This function will be called by the TopMenu
+  const handleAddView = (componentType: string, title: string) => {
+    // Call the addComponent method exposed by the child component
+    layoutRef.current?.addComponent(componentType, title);
+  };
 
   return (
     <div className="flex flex-col h-screen c2-bg-dark c2-text">
-      <MenuBar />
-
-      <GoldenLayout />
-
-      {/*
+      <MenuBar onAddView={handleAddView} />
       <div className="flex-1 flex overflow-hidden">
-        <PanelGroup direction="vertical">
-          <Panel defaultSize={30} minSize={20}>
-            <Clients />
-          </Panel>
-          <Divider />
-          <Panel minSize={30}>
-            <div className="flex-1 flex flex-col">
-              <TabBar/>
-              <CommandInterface />
-            </div>
-          </Panel>
-        </PanelGroup>
+        <GoldenLayoutComponent ref={layoutRef} />
       </div>
-      */}
     </div>
   );
 }

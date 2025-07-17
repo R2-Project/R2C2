@@ -1,6 +1,6 @@
-import React, { useLayoutEffect, useRef } from 'react';
+import React, { useLayoutEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import { createRoot } from 'react-dom/client';
-import { GoldenLayout, ComponentContainer, LayoutConfig } from 'golden-layout';
+import { GoldenLayout, ComponentContainer, LayoutConfig, Stack } from 'golden-layout';
 import 'golden-layout/dist/css/goldenlayout-base.css';
 import 'golden-layout/dist/css/themes/goldenlayout-dark-theme.css';
 
@@ -8,10 +8,31 @@ import 'golden-layout/dist/css/themes/goldenlayout-dark-theme.css';
 import Clients from './Clients';
 import FileExplorer from './FileExplorer';
 import CommandInterface from './CommandInterface';
+import NetworkMap from './NetworkMap';
 
-const GoldenLayoutComponent: React.FC = () => {
+export interface GoldenLayoutRef {
+  addComponent: (componentType: string, title: string) => void;
+}
+
+const GoldenLayoutComponent = forwardRef<GoldenLayoutRef, {}>((props, ref) => {
   const layoutRef = useRef<HTMLDivElement>(null);
   const glInstance = useRef<GoldenLayout | null>(null);
+
+  useImperativeHandle(ref, () => ({
+    addComponent(componentType: string, title: string) {
+      const gl = glInstance.current;
+      if (!gl) return;
+      const targetId = "bottomStack"
+
+      // const targetItem = gl.findFirstComponentItemById(targetId);
+      // Add the component to the first content item (usually a stack)
+      gl.rootItem?.contentItems.forEach((item) => {
+        if (item instanceof Stack && item.id === targetId) {
+          item.addItem({ type: 'component', componentType, title });
+        }
+      })
+    }
+  }));
 
   useLayoutEffect(() => {
     if (layoutRef.current && !glInstance.current) {
@@ -27,20 +48,25 @@ const GoldenLayoutComponent: React.FC = () => {
       };
 
       // 3. Register your TSX components
-      gl.registerComponent('clients', (container) => {
+      gl.registerComponent('clients', (container: ComponentContainer) => {
         createReactComponent(container, Clients);
       });
-
-      gl.registerComponent('fileExplorer', (container) => {
+      gl.registerComponent('commandInterface', (container: ComponentContainer) => {
+        createReactComponent(container, CommandInterface);
+      });
+      gl.registerComponent('fileExplorer', (container: ComponentContainer) => {
         createReactComponent(container, FileExplorer);
       });
-
-      gl.registerComponent('commandInterface', (container) => {
-        createReactComponent(container, CommandInterface);
+      gl.registerComponent('networkMap', (container: ComponentContainer) => {
+        createReactComponent(container, NetworkMap);
       });
 
       // 4. Define the initial layout configuration
       const layoutConfig: LayoutConfig = {
+        settings: {
+          popoutWholeStack: false,
+          showPopoutIcon: false,
+        },
         root: {
           type: 'column',
           content: [
@@ -52,13 +78,8 @@ const GoldenLayoutComponent: React.FC = () => {
             },
             {
               type: 'stack',
+              id: 'bottomStack',
               content: [
-                {
-                  type: 'component',
-                  componentType: 'fileExplorer',
-                  title: 'File Explorer',
-                  height: 100,
-                },
                 {
                   type: 'component',
                   componentType: 'commandInterface',
@@ -87,6 +108,6 @@ const GoldenLayoutComponent: React.FC = () => {
   }, []); // Empty dependency array ensures this runs only once
 
   return <div ref={layoutRef} style={{ width: '100vw', height: '100vh' }} />;
-};
+});
 
 export default GoldenLayoutComponent;
