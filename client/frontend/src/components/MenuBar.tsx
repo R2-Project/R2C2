@@ -7,15 +7,13 @@ import {
   DropdownMenuTrigger,
   DropdownMenuCheckboxItem
 } from "@/components/ui/dropdown-menu";
-import { Check } from 'lucide-react'
 import NewSession from '@/components/menu/NewSession'
-import { Button } from "@/components/ui/button"
 
 interface TopMenuProps {
   onAddView: (componentType: string, title: string) => void;
 }
 
-export default function MenuBar({ onAddView }: { onAddView: (componentType: string, title: string) => void }) {
+export default function MenuBar({ onAddView }: { onAddView: (componentName: string, componentTitle: string, targetTabsetId: string) => void }) {
   const [connectionStatus, setConnectionStatus] = useState("Connected");
   const [activeSessions, setActiveSessions] = useState(3);
   const [newSessionDialogOpen, setNewSessionDialogOpen] = useState(false);
@@ -47,14 +45,14 @@ export default function MenuBar({ onAddView }: { onAddView: (componentType: stri
               View
             </DropdownMenuTrigger>
             <DropdownMenuContent className="c2-bg-panel c2-border border min-w-32">
-              <DropdownMenuCheckboxItem onClick={() => onAddView('networkMap', 'NetworkMap')} className="hover:c2-bg-dark focus:c2-bg-dark">
+              <DropdownMenuCheckboxItem className="hover:c2-bg-dark focus:c2-bg-dark focus:text-white">
+                Clients
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem onClick={() => onAddView('networkMap', 'NetworkMap', 'topTabset')} className="hover:c2-bg-dark focus:c2-bg-dark focus:text-white">
                 Network Map
               </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem checked={true} className="hover:c2-bg-dark focus:c2-bg-dark">
-                Console
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem className="hover:c2-bg-dark focus:c2-bg-dark">
-                File Explorer
+              <DropdownMenuCheckboxItem className="hover:c2-bg-dark focus:c2-bg-dark focus:text-white" onClick={() => onAddView('listeners', 'Listeners', 'bottomTabset')}>
+                Listeners
               </DropdownMenuCheckboxItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -66,9 +64,6 @@ export default function MenuBar({ onAddView }: { onAddView: (componentType: stri
             <DropdownMenuContent className="c2-bg-panel c2-border border min-w-32">
               <DropdownMenuItem className="hover:c2-bg-dark focus:c2-bg-dark">
                 Payload Generator
-              </DropdownMenuItem>
-              <DropdownMenuItem className="hover:c2-bg-dark focus:c2-bg-dark">
-                Listeners
               </DropdownMenuItem>
               <DropdownMenuItem className="hover:c2-bg-dark focus:c2-bg-dark">
                 Pivoting
