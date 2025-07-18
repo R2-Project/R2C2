@@ -4,7 +4,7 @@ import { Model, Actions, TabNode, IJsonModel, Layout, DockLocation } from 'flexl
 import Clients from '@/components/Clients';
 import NetworkMap from '@/components/NetworkMap';
 import Listeners from '@/components/listeners/Listeners';
-import 'flexlayout-react/style/light.css';
+import 'flexlayout-react/style/dark.css';
 
 const jsonModel: IJsonModel = {
   global: {
