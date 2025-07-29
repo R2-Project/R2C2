@@ -12,14 +12,8 @@ var cfg *Config
 var once sync.Once
 
 type Config struct {
-	Api ApiConfig `yaml:"api"`
-	// Operators []Operator `yaml:"profile"`
-}
-
-type ApiConfig struct {
-	Host     string `yaml:"host"`
-	Port     int    `yaml:"port"`
-	Protocol string `yaml:"protocol"`
+	Api       ApiConfig  `yaml:"api"`
+	Operators []Operator `yaml:"operators"`
 }
 
 func GetConfig(path string) (*Config, error) {

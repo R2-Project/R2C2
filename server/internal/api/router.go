@@ -7,7 +7,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func StartServer(host string, port int, protocol string) error {
+func StartServer(port int) error {
+
 	router := gin.New()
 
 	router.GET("/ping", func(c *gin.Context) {
