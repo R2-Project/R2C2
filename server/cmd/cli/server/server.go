@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/mati-olivera/R2C2/internal/api"
 	"github.com/spf13/cobra"
 )
 
@@ -14,7 +15,7 @@ var protocol string
 
 func init() {
 	ServerCmd.Flags().BoolVar(&start, "start", true, "--start")
-	ServerCmd.Flags().StringVarP(&host, "host", "H", "127.0.0.0", "")
+	ServerCmd.Flags().StringVarP(&host, "host", "H", "0.0.0.0", "")
 	ServerCmd.Flags().IntVarP(&port, "port", "P", 8080, "")
 	ServerCmd.Flags().StringVarP(&protocol, "protocol", "", "http", "http,https")
 }
@@ -27,7 +28,15 @@ var ServerCmd = &cobra.Command{
 		if protocol != "http" && protocol != "https" {
 			return fmt.Errorf("invalid value for --protocol: %s (allowed: http, https)", protocol)
 		}
-		fmt.Println("SERVERRRRRRR")
+
+		if start {
+			err := api.StartServer(host, port, protocol)
+			if err != nil {
+				return fmt.Errorf("failed to start server: %w", err)
+			}
+		}
+
+		cmd.Help()
 		return nil
 	},
 }
