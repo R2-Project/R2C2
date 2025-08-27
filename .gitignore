@@ -1,7 +1,5 @@
 .DS_Store
 
 .vs
-implant/x64
-implant/Debug
-implant/**/*.vcxproj*
-implant/**/*.sln
+implant/CMakeSettings.json
+implant/out/
