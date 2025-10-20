@@ -4,3 +4,15 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+
+[features]
+default = [] 
+
+http = []
+tcp = []
+websocket = []
+
+full = ["http", "tcp", "websocket"]
+
+# [env]
+# SESSION_ID
