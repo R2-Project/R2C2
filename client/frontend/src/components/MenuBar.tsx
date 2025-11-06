@@ -8,6 +8,7 @@ import {
   DropdownMenuCheckboxItem
 } from "@/components/ui/dropdown-menu";
 import NewSession from '@/components/menu/NewSession'
+import R2C2Icon from '@/assets/images/r2c2-1.jpeg'
 
 interface TopMenuProps {
   onAddView: (componentType: string, title: string) => void;
@@ -87,7 +88,18 @@ export default function MenuBar({ onAddView }: { onAddView: (componentName: stri
         </div>
 
         <div className="ml-auto flex items-center space-x-4">
-          <span className="flex items-center space-x-1">
+          <button
+            type="button"
+            className="flex items-center justify-center hover:opacity-75"
+            aria-label="Settings"
+            onClick={() => onAddView('chatbot', 'R2C2 Chatbot', 'bottomTabset')}
+          >
+            <img
+              src={R2C2Icon}
+              alt="R2C2"
+              className="w-5 h-5"
+            />
+          </button>          <span className="flex items-center space-x-1">
             <div className="w-2 h-2 bg-green-400 rounded-full"></div>
             <span className="c2-text-dim">{connectionStatus}</span>
           </span>

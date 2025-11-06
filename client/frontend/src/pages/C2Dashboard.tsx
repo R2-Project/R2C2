@@ -4,6 +4,7 @@ import { Model, Actions, TabNode, IJsonModel, Layout, DockLocation } from 'flexl
 import Clients from '@/components/Clients';
 import NetworkMap from '@/components/NetworkMap';
 import Listeners from '@/components/listeners/Listeners';
+import AIChatbot from '@/components/AIChatbot';
 import 'flexlayout-react/style/dark.css';
 
 const jsonModel: IJsonModel = {
@@ -56,6 +57,8 @@ export default function C2Dashboard() {
         return <Listeners />;
       case 'networkMap':
         return <NetworkMap />;
+      case 'chatbot':
+        return <AIChatbot />;
       default:
         return null;
     }
