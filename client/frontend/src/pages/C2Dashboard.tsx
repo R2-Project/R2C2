@@ -6,6 +6,7 @@ import NetworkMap from '@/components/NetworkMap';
 import Listeners from '@/components/listeners/Listeners';
 import AIChatbot from '@/components/AIChatbot';
 import 'flexlayout-react/style/dark.css';
+import ShortcutsBar from '@/components/menu/ShortcutsBar';
 
 const jsonModel: IJsonModel = {
   global: {
@@ -16,6 +17,7 @@ const jsonModel: IJsonModel = {
     type: 'row',
     weight: 100,
     children: [
+      /*
       {
         type: 'tabset',
         id: 'topTabset', // ID for the left panel
@@ -28,6 +30,7 @@ const jsonModel: IJsonModel = {
           },
         ],
       },
+      */
       {
         type: 'tabset',
         id: 'bottomTabset', // ID for the main panel
@@ -84,6 +87,7 @@ export default function C2Dashboard() {
   return (
     <div className="flex flex-col h-screen c2-bg-dark c2-text">
       <MenuBar onAddView={onAddView} />
+      <ShortcutsBar />
       <div className="flex-1 flex overflow-hidden relative">
         <Layout
           model={model.current}

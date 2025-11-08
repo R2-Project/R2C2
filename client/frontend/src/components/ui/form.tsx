@@ -44,9 +44,25 @@ const FormField = <
 const useFormField = () => {
   const fieldContext = React.useContext(FormFieldContext)
   const itemContext = React.useContext(FormItemContext)
-  const { getFieldState, formState } = useFormContext()
+  // useFormContext may not expose getFieldState on older react-hook-form versions.
+  const formCtx = useFormContext()
+  const { formState } = formCtx as any
+  const getFieldStateFn = (formCtx as any).getFieldState
 
-  const fieldState = getFieldState(fieldContext.name, formState)
+  let fieldState: any
+  if (typeof getFieldStateFn === "function") {
+    fieldState = getFieldStateFn(fieldContext.name, formState)
+  } else {
+    // fallback deriving basic state from formState shape
+    const name = fieldContext.name as any
+    const errors = (formState && (formState as any).errors) || {}
+    fieldState = {
+      invalid: !!errors?.[name],
+      error: errors?.[name],
+      isTouched: !!(formState && (formState as any).touchedFields?.[name]),
+      isDirty: !!(formState && (formState as any).dirtyFields?.[name]),
+    }
+  }
 
   if (!fieldContext) {
     throw new Error("useFormField should be used within <FormField>")
