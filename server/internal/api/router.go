@@ -7,12 +7,9 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/mati-olivera/R2C2/internal/core/listeners"
 )
 
 func StartServer(port int) error {
-
-	listenersService := listeners.NewListenersService()
 
 	router := gin.New()
 
@@ -44,30 +41,29 @@ func StartServer(port int) error {
 
 	router.GET("/listeners", func(c *gin.Context) {
 
-		listeners := listenersService.GetHttpListeners()
+		// listeners := listenersService.GetHttpListeners()
 
 		c.JSON(http.StatusOK, gin.H{
 			"message": "Current Listeners",
-			"data":    listeners,
+			// "data":    listeners,
 		})
 	})
 
 	router.POST("/listeners/http", func(c *gin.Context) {
 
-		var data listeners.NewHttpListenerRequest
-		if err := c.ShouldBindJSON(&data); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": err.Error(),
-			})
-			return
-		}
-
-		listener := listeners.NewHttpListener(data)
-		listenersService.AddHttpListener(listener)
+		// var data listeners.NewHttpListenerRequest
+		// if err := c.ShouldBindJSON(&data); err != nil {
+		// 	c.JSON(http.StatusBadRequest, gin.H{
+		// 		"error": err.Error(),
+		// 	})
+		// 	return
+		// }
+		//
+		// listenersService.AddHttpListener(listener)
 
 		c.JSON(http.StatusCreated, gin.H{
 			"message": "Listener Created",
-			"data":    listener,
+			// "data":    listener,
 		})
 	})
 

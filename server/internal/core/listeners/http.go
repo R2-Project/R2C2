@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"strconv"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 type HttpListener struct {
@@ -38,28 +36,6 @@ type NewHttpListenerRequest struct {
 	Cert            *Cert    `json:"cert,omitempty"` // Optional, only if Secure is true
 	ResponseHeaders []string `json:"response_headers,omitempty"`
 	Uris            []string `json:"uris"` // las que va a usar el implante para ciclar peticiones
-}
-
-// TODO: add listener to  db / state manager
-func NewHttpListener(request NewHttpListenerRequest) *HttpListener {
-
-	if request.Secure && request.Cert == nil {
-		log.Fatal("Secure HTTP listener requires a certificate")
-	}
-
-	return &HttpListener{
-		Id:              uuid.New().String(),
-		Name:            request.Name,
-		Host:            request.Host,
-		Port:            request.Port,
-		Secure:          request.Secure,
-		Clients:         nil,
-		LiveSince:       time.Now().Format(time.RFC3339),
-		Status:          "running",
-		Cert:            request.Cert,
-		ResponseHeaders: request.ResponseHeaders,
-		Uris:            request.Uris,
-	}
 }
 
 func (h *HttpListener) Start() {
