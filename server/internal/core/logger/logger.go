@@ -1,34 +1,44 @@
 package logger
 
 import (
+	"io"
 	"os"
 	"time"
 
 	"github.com/rs/zerolog"
 )
 
-var zLog zerolog.Logger
+var (
+	zLog          zerolog.Logger
+	consoleWriter zerolog.ConsoleWriter
+	fileWriter    zerolog.ConsoleWriter
+)
 
 func init() {
 
-	logFile, _ := os.OpenFile("r2c2.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	logFile, err := os.OpenFile("r2c2.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	if err != nil {
+		panic("Failed to open log file: " + err.Error())
+	}
 
-	consoleWriter := zerolog.ConsoleWriter{
+	consoleWriter = zerolog.ConsoleWriter{
 		Out:        os.Stdout,
 		TimeFormat: time.RFC3339,
 	}
 
-	fileWriter := zerolog.ConsoleWriter{
+	fileWriter = zerolog.ConsoleWriter{
 		Out:        logFile,
 		TimeFormat: time.RFC3339,
 		NoColor:    true, // no ANSI colors in .log file
 	}
 
-	// We pass the raw WSWriter. Zerolog will write the raw JSON bytes to it.
-	// wsWriter := &WSWriter{Hub: hub}
-
 	multi := zerolog.MultiLevelWriter(consoleWriter, fileWriter)
 
+	zLog = zerolog.New(multi).With().Timestamp().Logger()
+}
+
+func AttachWebsocketWriter(wsWriter io.Writer) {
+	multi := zerolog.MultiLevelWriter(consoleWriter, fileWriter, wsWriter)
 	zLog = zerolog.New(multi).With().Timestamp().Logger()
 }
 

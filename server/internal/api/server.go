@@ -7,11 +7,24 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
+	"github.com/mati-olivera/R2C2/internal/core/logger"
 )
+
+var upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool { return true },
+}
 
 func StartServer(port int) error {
 
 	router := gin.New()
+
+	hub := NewHub()
+	go hub.Run()
+
+	hubWriter := &LogAdapter{Hub: hub}
+	logger.AttachWebsocketWriter(hubWriter)
+	logger.Info("Websocket log adapter attached")
 
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
@@ -33,38 +46,22 @@ func StartServer(port int) error {
 		c.Next()
 	})
 
+	// TODO: check gin mode
 	router.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"message": "pong",
 		})
 	})
 
-	router.GET("/listeners", func(c *gin.Context) {
+	router.GET("/ws", func(c *gin.Context) {
+		conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+		if err != nil {
+			return
+		}
 
-		// listeners := listenersService.GetHttpListeners()
+		hub.AddClient(conn)
 
-		c.JSON(http.StatusOK, gin.H{
-			"message": "Current Listeners",
-			// "data":    listeners,
-		})
-	})
-
-	router.POST("/listeners/http", func(c *gin.Context) {
-
-		// var data listeners.NewHttpListenerRequest
-		// if err := c.ShouldBindJSON(&data); err != nil {
-		// 	c.JSON(http.StatusBadRequest, gin.H{
-		// 		"error": err.Error(),
-		// 	})
-		// 	return
-		// }
-		//
-		// listenersService.AddHttpListener(listener)
-
-		c.JSON(http.StatusCreated, gin.H{
-			"message": "Listener Created",
-			// "data":    listener,
-		})
+		logger.Info("Operator X connected", "remote_addr", conn.RemoteAddr().String())
 	})
 
 	sport := strconv.Itoa(port)
