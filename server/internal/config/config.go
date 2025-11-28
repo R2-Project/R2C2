@@ -12,8 +12,9 @@ var cfg *Config
 var once sync.Once
 
 type Config struct {
-	Api       ApiConfig  `yaml:"api"`
-	Operators []Operator `yaml:"operators"`
+	Api          ApiConfig  `yaml:"api"`
+	Operators    []Operator `yaml:"operators"`
+	DatabasePath string     `yaml:"database_path"`
 }
 
 func GetConfig(path string) (*Config, error) {

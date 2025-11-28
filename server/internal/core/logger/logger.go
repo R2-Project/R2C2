@@ -1,4 +1,4 @@
-package events
+package logger
 
 import (
 	"os"
@@ -42,6 +42,14 @@ func Warn(msg string, keysAndValues ...interface{}) {
 
 func Error(msg string, err error, keysAndValues ...interface{}) {
 	event := zLog.Error()
+	if err != nil {
+		event.Err(err)
+	}
+	logEvent(event, msg, keysAndValues...)
+}
+
+func Fatal(msg string, err error, keysAndValues ...interface{}) {
+	event := zLog.Fatal()
 	if err != nil {
 		event.Err(err)
 	}

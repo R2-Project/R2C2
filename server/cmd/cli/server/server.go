@@ -26,11 +26,16 @@ var ServerCmd = &cobra.Command{
 			if configPathFlag == "" {
 				return fmt.Errorf("the --config flag with the configuration file path is required")
 			}
-			config, err := config.GetConfig(configPathFlag)
+			conf, err := config.GetConfig(configPathFlag)
 			if err != nil {
 				return fmt.Errorf("failed to get configuration: %w", err)
 			}
-			err = api.StartServer(config.Api.Port)
+			_, err = config.InitDatabase(conf.DatabasePath)
+			if err != nil {
+				return fmt.Errorf("failed to initialize database: %w", err)
+			}
+
+			err = api.StartServer(conf.Api.Port)
 			if err != nil {
 				return fmt.Errorf("failed to start server: %w", err)
 			}
