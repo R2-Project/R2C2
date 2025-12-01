@@ -3,6 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 const tableData = [
   {
     id: 1,
+    session_id: "abc123",
     external: "192.168.1.54",
     internal: "192.168.1.54",
     listener: "HTTP",
@@ -13,6 +14,19 @@ const tableData = [
     arch: "x64",
     last_ping: "1m",
   },
+  {
+    id: 2,
+    session_id: "def456",
+    external: "192.168.1.55",
+    internal: "192.168.1.55",
+    listener: "SMB",
+    user: "jane.smith",
+    computer: "LAPTOP-XYZ789",
+    process: "explorer.exe",
+    pid: 4122,
+    arch: "x86",
+    last_ping: "5m",
+  },
 ]
 
 export default function Component() {
@@ -22,6 +36,7 @@ export default function Component() {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>Session ID</TableHead>
               <TableHead>External</TableHead>
               <TableHead>Internal</TableHead>
               <TableHead>Listener</TableHead>
@@ -36,6 +51,7 @@ export default function Component() {
           <TableBody>
             {tableData.map((item) => (
               <TableRow key={item.id}>
+                <TableCell>{item.session_id}</TableCell>
                 <TableCell>{item.external}</TableCell>
                 <TableCell>{item.internal}</TableCell>
                 <TableCell>{item.listener}</TableCell>

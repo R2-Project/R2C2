@@ -7,20 +7,66 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { getListeners, Listener } from "@/services/listeners"
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu"
+// import { getListeners, Listener } from "@/services/listeners"
 import { Button } from "@/components/ui/button"
+import NewListener from "./NewListener"
+import NewAgent from "../agents/NewAgent"
 
-export default function Listeners() {
-  const [listeners, setListeners] = useState<Listener[] | null>(null)
+// Mock data for display
+const mockListeners = [
+  {
+    id: "1",
+    name: "http-listener-1",
+    type: "HTTP",
+    host: "0.0.0.0",
+    port: 8080,
+    uri: "/api",
+    status: "Running",
+  },
+  {
+    id: "2",
+    name: "smb-listener-1",
+    type: "SMB",
+    host: "192.168.1.10",
+    port: 445,
+    uri: "pipe/c2",
+    status: "Stopped",
+  },
+  {
+    id: "3",
+    name: "tcp-listener-1",
+    type: "TCP",
+    host: "10.0.0.5",
+    port: 9090,
+    uri: "-",
+    status: "Running",
+  },
+]
+
+type Props = {
+  onAddView?: (componentName: string, componentTitle: string, targetTabsetId: string) => void
+}
+
+export default function Listeners({ onAddView }: Props) {
+  const [listeners, setListeners] = useState<any[] | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isNewListenerOpen, setIsNewListenerOpen] = useState(false)
+  const [isNewAgentOpen, setIsNewAgentOpen] = useState(false)
 
   async function load() {
     setLoading(true)
     setError(null)
     try {
-      const data = await getListeners()
-      setListeners(Array.isArray(data) ? data : [])
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 600))
+      setListeners(mockListeners)
     } catch (e: any) {
       setError(e?.message || "Failed to load listeners")
       setListeners([])
@@ -71,18 +117,32 @@ export default function Listeners() {
           </TableHeader>
           <TableBody>
             {listeners.map((item) => (
-              <TableRow key={item.id ?? JSON.stringify(item)}>
-                <TableCell>{item.name ?? "—"}</TableCell>
-                <TableCell>{(item.type ?? item.listenerType ?? "HTTP").toString()}</TableCell>
-                <TableCell>{(item.host ?? item.ip ?? "—").toString()}</TableCell>
-                <TableCell>{(item.port ?? "—").toString()}</TableCell>
-                <TableCell>{(item.uri ?? item.uris ?? "—").toString()}</TableCell>
-                <TableCell>{(item.status ?? "—").toString()}</TableCell>
-              </TableRow>
+              <ContextMenu key={item.id ?? JSON.stringify(item)}>
+                <ContextMenuTrigger asChild>
+                  <TableRow>
+                    <TableCell>{item.name ?? "—"}</TableCell>
+                    <TableCell>{(item.type ?? item.listenerType ?? "HTTP").toString()}</TableCell>
+                    <TableCell>{(item.host ?? item.ip ?? "—").toString()}</TableCell>
+                    <TableCell>{(item.port ?? "—").toString()}</TableCell>
+                    <TableCell>{(item.uri ?? item.uris ?? "—").toString()}</TableCell>
+                    <TableCell>{(item.status ?? "—").toString()}</TableCell>
+                  </TableRow>
+                </ContextMenuTrigger>
+                <ContextMenuContent>
+                  <ContextMenuItem onClick={() => setIsNewListenerOpen(true)}>
+                    Create new listener
+                  </ContextMenuItem>
+                  <ContextMenuItem onClick={() => setIsNewAgentOpen(true)}>
+                    Create new Agent
+                  </ContextMenuItem>
+                </ContextMenuContent>
+              </ContextMenu>
             ))}
           </TableBody>
         </Table>
       </div>
+      <NewListener open={isNewListenerOpen} onOpenChange={setIsNewListenerOpen} />
+      <NewAgent open={isNewAgentOpen} onOpenChange={setIsNewAgentOpen} />
     </div>
   )
 }

@@ -4,11 +4,12 @@ import { Model, Actions, TabNode, IJsonModel, Layout, DockLocation, TabSetNode, 
 import Sessions from '@/components/Sessions';
 import NetworkMap from '@/components/NetworkMap';
 import Listeners from '@/components/listeners/Listeners';
+import NewListener from '@/components/listeners/NewListener';
 import AIChatbot from '@/components/AIChatbot';
 import Logs from '@/components/Logs';
 import 'flexlayout-react/style/dark.css';
 import ShortcutsBar from '@/components/menu/ShortcutsBar';
-import { Headphones, Network, Users, Bot, X, Maximize2, Minimize2, ChevronDown, HatGlasses, FileText } from "lucide-react"
+import { Headphones, Network, Users, Bot, X, Maximize2, Minimize2, ChevronDown, HatGlasses, FileText, Plus } from "lucide-react"
 
 const jsonModel: IJsonModel = {
   global: {
@@ -87,9 +88,11 @@ export default function C2Dashboard() {
       case 'sessions':
         return <Sessions />;
       case 'listeners':
-        return <Listeners />;
+        return <Listeners onAddView={onAddView} />;
+      case 'newListener':
+        return <NewListener />;
       case 'networkMap':
-        return <NetworkMap />;
+        return <NetworkMap onAddView={onAddView} />;
       case 'chatbot':
         return <AIChatbot />;
       case 'logs':
@@ -109,6 +112,9 @@ export default function C2Dashboard() {
         break;
       case 'listeners':
         Icon = Headphones;
+        break;
+      case 'newListener':
+        Icon = Plus;
         break;
       case 'networkMap':
         Icon = Network;

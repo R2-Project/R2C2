@@ -1,80 +1,188 @@
 import { useState, useCallback, memo } from 'react';
-import { ReactFlow, applyNodeChanges, applyEdgeChanges, addEdge, NodeProps, Position, Handle, Edge, Background, Controls, ReactFlowProvider } from '@xyflow/react';
+import { 
+  ReactFlow, 
+  applyNodeChanges, 
+  applyEdgeChanges, 
+  addEdge, 
+  NodeProps, 
+  Position, 
+  Handle, 
+  Edge, 
+  Background, 
+  Controls, 
+  ReactFlowProvider,
+  MarkerType,
+  Node
+} from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import r2c2Logo from '../assets/images/R2C2.webp'
+import R2C2Icon from '@/assets/images/r2c2-1.jpeg';
+import { Monitor } from 'lucide-react';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu"
 
-// We use React.memo for performance optimization
-const ImageNode = memo(({ data }: NodeProps<{ name: string, imageUrl: string }>) => {
+// Define custom node types
+type AgentNodeData = {
+  pcName: string;
+  sessionId: string;
+  agentName: string;
+  onAddView?: (componentName: string, componentTitle: string, targetTabsetId: string) => void;
+};
+
+type AgentNodeType = Node<AgentNodeData, 'agentNode'>;
+
+// R2C2 Server Node
+const ServerNode = memo(() => {
   return (
-    <div style={{
-      border: '2px solid #555',
-      borderRadius: '8px',
-      padding: '10px',
-      background: '#fff',
-      textAlign: 'center',
-      width: 150
-    }}>
-      {/* Handles are the connection points for edges */}
-      {/* Target handle on the left for the central node */}
-      <Handle type="target" position={Position.Left} id="left-target" />
-      {/* Target handle on the right for the central node */}
-      <Handle type="target" position={Position.Right} id="right-target" />
-
-      <img
-        src={data.imageUrl}
-        alt={data.name}
-        style={{ width: '100%', height: 'auto', borderRadius: '4px' }}
-      />
-      <h4 style={{ margin: '8px 0 0 0', padding: '0' }}>{data.name}</h4>
-
-      {/* Source handle on the left for right-side nodes */}
-      <Handle type="source" position={Position.Left} id="left-source" />
-      {/* Source handle on the right for left-side nodes */}
-      <Handle type="source" position={Position.Right} id="right-source" />
+    <div className="flex flex-col items-center justify-center w-32 h-32">
+      <div className="relative w-24 h-24 rounded-full border-4 border-primary shadow-[0_0_15px_rgba(189,147,249,0.5)] overflow-hidden bg-background">
+        <img
+          src={R2C2Icon}
+          alt="R2C2 Server"
+          className="w-full h-full object-cover"
+        />
+      </div>
+      <div className="mt-2 font-bold text-sm text-foreground bg-background/80 px-2 py-0.5 rounded">R2C2 Server</div>
+      <Handle type="source" position={Position.Right} className="!bg-primary !w-3 !h-3" />
     </div>
   );
 });
 
-const initialNodes = [
+// Agent Node (PC)
+const AgentNode = memo(({ data }: NodeProps<AgentNodeType>) => {
+  const handleWatchAgent = () => {
+    if (data.onAddView) {
+      data.onAddView('sessions', 'Sessions', 'bottomTabset');
+    }
+  };
+
+  return (
+    <ContextMenu>
+      <ContextMenuTrigger>
+        <div className="flex flex-col w-64 bg-card border border-border rounded-lg shadow-lg overflow-hidden relative">
+          <Handle type="target" position={Position.Left} className="!bg-primary !w-3 !h-3" />
+          <Handle type="source" position={Position.Right} className="!bg-primary !w-3 !h-3" />
+          
+          <div className="flex items-center gap-3 p-3 border-b border-border bg-muted/30">
+            <div className="p-2 bg-primary/10 rounded-md border border-primary/20">
+                <Monitor className="w-6 h-6 text-primary" />
+            </div>
+            <div className="flex flex-col overflow-hidden">
+                <span className="font-bold text-sm text-foreground truncate" title={data.pcName}>{data.pcName}</span>
+                <span className="text-xs text-muted-foreground font-mono truncate" title={data.sessionId}>ID: {data.sessionId}</span>
+            </div>
+          </div>
+          
+          <div className="p-3 bg-card">
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-muted-foreground">Agent:</span>
+              <span className="font-medium text-foreground bg-muted px-2 py-0.5 rounded">{data.agentName}</span>
+            </div>
+          </div>
+        </div>
+      </ContextMenuTrigger>
+      <ContextMenuContent>
+        <ContextMenuItem onClick={handleWatchAgent}>Watch Agent</ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
+  );
+});
+
+const initialNodes: Node[] = [
   {
-    id: 'left-1',
-    type: 'imageNode',
-    data: { name: 'Operator 1', imageUrl: 'https://i.pravatar.cc/150?img=1' },
-    position: { x: 50, y: 50 },
+    id: 'server',
+    type: 'serverNode',
+    data: { label: 'R2C2' },
+    position: { x: 50, y: 200 },
+    connectable: false,
   },
-  // Center Node
   {
-    id: 'center',
-    type: 'imageNode',
-    data: { name: 'R2C2', imageUrl: r2c2Logo },
-    position: { x: 350, y: 150 },
-  },
-  // Right Nodes
-  {
-    id: 'right-1',
-    type: 'imageNode',
-    data: { name: 'PC-ABC123', imageUrl: 'https://i.pravatar.cc/150?img=4' },
-    position: { x: 650, y: 50 },
+    id: 'agent-1',
+    type: 'agentNode',
+    data: { pcName: 'DESKTOP-ABC123', sessionId: 'a1b2c3d4', agentName: 'agent-win-x64' },
+    position: { x: 450, y: 50 },
+    connectable: false,
   },
   {
-    id: 'right-2',
-    type: 'imageNode',
-    data: { name: 'PC-CBA321', imageUrl: 'https://i.pravatar.cc/150?img=5' },
-    position: { x: 650, y: 250 },
+    id: 'agent-2',
+    type: 'agentNode',
+    data: { pcName: 'LAPTOP-XYZ789', sessionId: 'e5f6g7h8', agentName: 'agent-linux-x86' },
+    position: { x: 450, y: 350 },
+    connectable: false,
+  },
+  {
+    id: 'agent-3',
+    type: 'agentNode',
+    data: { pcName: 'WORKSTATION-01', sessionId: 'i9j0k1l2', agentName: 'agent-win-x64' },
+    position: { x: 850, y: 50 },
+    connectable: false,
   },
 ];
 
 const initialEdges: Edge[] = [
-  // Connections from left nodes to center
-  { id: 'e-left1-center', source: 'left-1', target: 'center', sourceHandle: 'right-source', targetHandle: 'left-target' },
-  { id: 'e-left2-center', source: 'left-2', target: 'center', sourceHandle: 'right-source', targetHandle: 'left-target' },
-  // Connections from right nodes to center
-  { id: 'e-right1-center', source: 'right-1', target: 'center', sourceHandle: 'left-source', targetHandle: 'right-target' },
-  { id: 'e-right2-center', source: 'right-2', target: 'center', sourceHandle: 'left-source', targetHandle: 'right-target' },
+  { 
+    id: 'e-server-agent1', 
+    source: 'server', 
+    target: 'agent-1', 
+    label: 'HTTPS',
+    type: 'smoothstep',
+    animated: true,
+    style: { stroke: '#bd93f9', strokeWidth: 2 }, // Dracula purple
+    labelStyle: { fill: '#f8f8f2', fontWeight: 700, fontSize: 12 },
+    labelBgStyle: { fill: '#282a36', fillOpacity: 0.8 },
+    markerEnd: { type: MarkerType.ArrowClosed, color: '#bd93f9' },
+  },
+  { 
+    id: 'e-server-agent2', 
+    source: 'server', 
+    target: 'agent-2', 
+    label: 'mTLS',
+    type: 'smoothstep',
+    animated: true,
+    style: { stroke: '#ff79c6', strokeWidth: 2 }, // Dracula pink
+    labelStyle: { fill: '#f8f8f2', fontWeight: 700, fontSize: 12 },
+    labelBgStyle: { fill: '#282a36', fillOpacity: 0.8 },
+    markerEnd: { type: MarkerType.ArrowClosed, color: '#ff79c6' },
+  },
+  { 
+    id: 'e-agent1-agent3', 
+    source: 'agent-1', 
+    target: 'agent-3', 
+    label: 'SMB',
+    type: 'smoothstep',
+    animated: true,
+    style: { stroke: '#50fa7b', strokeWidth: 2 }, // Dracula green
+    labelStyle: { fill: '#f8f8f2', fontWeight: 700, fontSize: 12 },
+    labelBgStyle: { fill: '#282a36', fillOpacity: 0.8 },
+    markerEnd: { type: MarkerType.ArrowClosed, color: '#50fa7b' },
+  },
 ];
 
-export default function NetworkMap() {
-  const [nodes, setNodes] = useState(initialNodes);
+const nodeTypes = {
+  serverNode: ServerNode,
+  agentNode: AgentNode,
+};
+
+type NetworkMapProps = {
+  onAddView?: (componentName: string, componentTitle: string, targetTabsetId: string) => void;
+};
+
+export default function NetworkMap({ onAddView }: NetworkMapProps) {
+  const [nodes, setNodes] = useState(initialNodes.map(node => {
+    if (node.type === 'agentNode') {
+      return {
+        ...node,
+        data: {
+          ...node.data,
+          onAddView
+        }
+      };
+    }
+    return node;
+  }));
   const [edges, setEdges] = useState(initialEdges);
 
   const onNodesChange = useCallback(
@@ -90,12 +198,8 @@ export default function NetworkMap() {
     [],
   );
 
-  const nodeTypes = {
-    imageNode: ImageNode,
-  };
-
   return (
-    <div style={{ width: '100vw', height: '100vh' }}>
+    <div className="w-full h-full bg-background">
       <ReactFlowProvider>
         <ReactFlow
           nodes={nodes}
@@ -104,8 +208,12 @@ export default function NetworkMap() {
           onEdgesChange={onEdgesChange}
           nodeTypes={nodeTypes}
           onConnect={onConnect}
+          nodesConnectable={false}
           fitView
-        />
+          className="bg-background"
+        >
+          <Background color="#44475a" gap={16} />
+        </ReactFlow>
       </ReactFlowProvider>
     </div>
   );
