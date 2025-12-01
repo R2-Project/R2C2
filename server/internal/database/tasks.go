@@ -21,6 +21,6 @@ func (r *TasksRepository) SaveTask(task *tasks.Task) error {
 	return err
 }
 
-func (r *TasksRepository) GetTasks() *[]tasks.Task {
-	return nil
+func (r *TasksRepository) GetTasks() (*[]tasks.Task, error) {
+	return nil, nil
 }

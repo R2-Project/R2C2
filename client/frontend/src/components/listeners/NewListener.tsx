@@ -3,10 +3,18 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Form, FormLabel, FormItem, FormMessage, FormControl } from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 import { createHttpListener } from "@/services/listeners"
-import { Checkbox } from "@radix-ui/react-checkbox"
-import { Check } from "lucide-react"
 
 type Props = {
   open: boolean
@@ -98,8 +106,7 @@ export default function NewListener({ open, onOpenChange, onCreated }: Props) {
                 <FormLabel>Name</FormLabel>
               </div>
               <FormControl>
-                <input
-                  className="w-full rounded-md border px-2 py-1 bg-slate-800 text-slate-100 border-slate-700"
+                <Input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. my-webhook"
@@ -111,16 +118,17 @@ export default function NewListener({ open, onOpenChange, onCreated }: Props) {
             <FormItem>
               <FormLabel>Listener Type</FormLabel>
               <FormControl>
-                <select
-                  className="w-full rounded-md border px-2 py-1 bg-slate-800 text-slate-100 border-slate-700"
-                  value={listenerType}
-                  onChange={(e) => setListenerType(e.target.value)}
-                >
-                  <option value="http">HTTP</option>
-                  <option value="smb" disabled>
-                    SMB
-                  </option>
-                </select>
+                <Select value={listenerType} onValueChange={setListenerType}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="http">HTTP</SelectItem>
+                    <SelectItem value="smb" disabled>
+                      SMB
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -130,8 +138,7 @@ export default function NewListener({ open, onOpenChange, onCreated }: Props) {
                 <div className="flex-1">
                   <FormLabel>Host</FormLabel>
                   <FormControl>
-                    <input
-                      className="w-full rounded-md border px-2 py-1 bg-slate-800 text-slate-100 border-slate-700"
+                    <Input
                       value={host}
                       onChange={(e) => setHost(e.target.value)}
                       placeholder="e.g. 10.10.10.1"
@@ -142,8 +149,7 @@ export default function NewListener({ open, onOpenChange, onCreated }: Props) {
                 <div className="w-32">
                   <FormLabel>Port</FormLabel>
                   <FormControl>
-                    <input
-                      className="w-full rounded-md border px-2 py-1 bg-slate-800 text-slate-100 border-slate-700"
+                    <Input
                       value={port}
                       onChange={(e) => setPort(e.target.value)}
                       placeholder="e.g. 8080"
@@ -160,11 +166,8 @@ export default function NewListener({ open, onOpenChange, onCreated }: Props) {
                   id="use-ssl"
                   checked={useSSL}
                   onCheckedChange={(v) => setUseSSL(Boolean(v))}
-                  className="w-5 h-5 rounded border bg-slate-800 border-slate-700 flex items-center justify-center"
-                >
-                  {useSSL && <Check className="w-4 h-4 text-slate-100" />}
-                </Checkbox>
-                <label htmlFor="use-ssl" className="text-sm text-slate-100">
+                />
+                <label htmlFor="use-ssl" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                   Use SSL
                 </label>
               </div>
@@ -174,8 +177,8 @@ export default function NewListener({ open, onOpenChange, onCreated }: Props) {
             <FormItem>
               <FormLabel>Response Headers</FormLabel>
               <FormControl>
-                <textarea
-                  className="w-full rounded-md border px-2 py-1 font-mono text-sm bg-slate-800 text-slate-100 border-slate-700"
+                <Textarea
+                  className="font-mono text-sm"
                   rows={4}
                   value={headersText}
                   onChange={(e) => setHeadersText(e.target.value)}
@@ -187,8 +190,8 @@ export default function NewListener({ open, onOpenChange, onCreated }: Props) {
             <FormItem>
               <FormLabel>URIs</FormLabel>
               <FormControl>
-                <textarea
-                  className="w-full rounded-md border px-2 py-1 font-mono text-sm bg-slate-800 text-slate-100 border-slate-700"
+                <Textarea
+                  className="font-mono text-sm"
                   rows={4}
                   value={uris}
                   onChange={(e) => setUrisText(e.target.value)}
@@ -198,7 +201,7 @@ export default function NewListener({ open, onOpenChange, onCreated }: Props) {
             </FormItem>
           </Form>
 
-          {error && <div className="text-sm text-red-600">{error}</div>}
+          {error && <div className="text-sm text-destructive">{error}</div>}
           {success && <div className="text-sm text-green-600">{success}</div>}
         </div>
 

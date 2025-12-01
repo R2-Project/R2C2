@@ -8,7 +8,7 @@ import {
   DropdownMenuCheckboxItem
 } from "@/components/ui/dropdown-menu";
 import NewSession from '@/components/menu/NewSession'
-import R2C2Icon from '@/assets/images/r2c2-1.jpeg'
+import { useTheme } from "@/components/theme-provider"
 
 interface TopMenuProps {
   onAddView: (componentType: string, title: string) => void;
@@ -18,6 +18,7 @@ export default function MenuBar({ onAddView }: { onAddView: (componentName: stri
   const [connectionStatus, setConnectionStatus] = useState("Connected");
   const [activeSessions, setActiveSessions] = useState(3);
   const [newSessionDialogOpen, setNewSessionDialogOpen] = useState(false);
+  const { setTheme } = useTheme()
 
   return (
     <>
@@ -60,6 +61,17 @@ export default function MenuBar({ onAddView }: { onAddView: (componentName: stri
 
           <DropdownMenu>
             <DropdownMenuTrigger className="px-2 py-1 hover:c2-bg-dark rounded outline-none">
+              Theme
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="c2-bg-panel c2-border border min-w-32">
+              <DropdownMenuItem onClick={() => setTheme("dracula")} className="hover:c2-bg-dark focus:c2-bg-dark">
+                Dracula
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger className="px-2 py-1 hover:c2-bg-dark rounded outline-none">
               Tools
             </DropdownMenuTrigger>
             <DropdownMenuContent className="c2-bg-panel c2-border border min-w-32">
@@ -88,18 +100,7 @@ export default function MenuBar({ onAddView }: { onAddView: (componentName: stri
         </div>
 
         <div className="ml-auto flex items-center space-x-4">
-          <button
-            type="button"
-            className="flex items-center justify-center hover:opacity-75"
-            aria-label="Settings"
-            onClick={() => onAddView('chatbot', 'R2C2 Chatbot', 'bottomTabset')}
-          >
-            <img
-              src={R2C2Icon}
-              alt="R2C2"
-              className="w-5 h-5"
-            />
-          </button>          <span className="flex items-center space-x-1">
+          <span className="flex items-center space-x-1">
             <div className="w-2 h-2 bg-green-400 rounded-full"></div>
             <span className="c2-text-dim">{connectionStatus}</span>
           </span>

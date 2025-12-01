@@ -2,6 +2,6 @@ package tasks
 
 type TaskRepository interface {
 	SaveTask(task *Task) error
-	GetTasks() *[]Task
+	GetTasks() (*[]Task, error)
 	GetTaskById(id string) (*Task, error)
 }

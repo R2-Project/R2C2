@@ -40,7 +40,7 @@ export default function Listeners() {
   if (error) {
     return (
       <div className="p-4">
-        <div className="text-sm text-red-600 mb-2">Error: {error}</div>
+        <div className="text-sm text-destructive mb-2">Error: {error}</div>
         <Button onClick={load}>Retry</Button>
       </div>
     )

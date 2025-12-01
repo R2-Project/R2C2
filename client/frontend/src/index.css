@@ -61,6 +61,40 @@
   --ring: hsl(0, 0%, 25%);
 }
 
+.dracula {
+  --background: hsl(231, 15%, 18%);
+  --foreground: hsl(60, 30%, 96%);
+  --card: hsl(231, 15%, 25%);
+  --card-foreground: hsl(60, 30%, 96%);
+  --popover: hsl(231, 15%, 18%);
+  --popover-foreground: hsl(60, 30%, 96%);
+  --primary: hsl(265, 89%, 78%);
+  --primary-foreground: hsl(231, 15%, 18%);
+  --secondary: hsl(231, 15%, 31%);
+  --secondary-foreground: hsl(60, 30%, 96%);
+  --muted: hsl(231, 15%, 31%);
+  --muted-foreground: hsl(231, 27%, 51%);
+  --accent: hsl(326, 100%, 74%);
+  --accent-foreground: hsl(60, 30%, 96%);
+  --destructive: hsl(0, 100%, 67%);
+  --destructive-foreground: hsl(60, 30%, 96%);
+  --border: hsl(231, 15%, 31%);
+  --input: hsl(231, 15%, 31%);
+  --ring: hsl(265, 89%, 78%);
+
+  /* C2 Specific Colors */
+  --c2-dark: hsl(231, 15%, 18%);
+  --c2-darker: hsl(231, 15%, 10%);
+  --c2-panel: hsl(231, 15%, 25%);
+  --c2-border: hsl(231, 15%, 31%);
+  --c2-accent: hsl(265, 89%, 78%);
+  --c2-info: hsl(191, 97%, 77%);
+  --c2-warning: hsl(31, 100%, 71%);
+  --c2-error: hsl(0, 100%, 67%);
+  --c2-text: hsl(60, 30%, 96%);
+  --c2-text-dim: hsl(231, 27%, 51%);
+}
+
 @layer base {
   * {
     @apply border-border;
@@ -105,4 +139,91 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--c2-text-dim);
+}
+
+/* FlexLayout Overrides for Dracula Theme */
+.dracula .flexlayout__layout {
+  background-color: var(--background) !important;
+  color: var(--foreground);
+}
+
+.dracula .flexlayout__tabset {
+  background-color: var(--background) !important;
+}
+
+.dracula .flexlayout__tabset_header {
+  background-color: var(--background);
+  border-bottom: 1px solid var(--border);
+  box-shadow: none;
+}
+
+.dracula .flexlayout__tabset_tabbar_outer {
+  background-color: var(--background);
+}
+
+.dracula .flexlayout__tab_button {
+  background-color: var(--muted);
+  color: var(--muted-foreground);
+  border: none;
+  border-right: 1px solid var(--border);
+  margin-right: 1px;
+  padding: 4px 12px;
+  font-family: inherit;
+  font-size: 0.875rem;
+  border-radius: 0;
+}
+
+.dracula .flexlayout__tab_button:hover {
+  background-color: var(--secondary);
+  color: var(--foreground);
+}
+
+.dracula .flexlayout__tab_button--selected {
+  background-color: var(--background);
+  background-image: none !important;
+  color: var(--primary);
+  border-top: 2px solid var(--primary);
+  border-right: 1px solid var(--border);
+}
+
+.dracula .flexlayout__tabset-selected {
+  background-image: none !important;
+  background-color: var(--background);
+}
+
+.dracula .flexlayout__splitter {
+  background-color: var(--border);
+}
+
+.dracula .flexlayout__splitter:hover {
+  background-color: var(--primary);
+}
+
+.dracula .flexlayout__tab_toolbar_button {
+  color: var(--muted-foreground);
+}
+
+.dracula .flexlayout__tab_toolbar_button:hover {
+  color: var(--foreground);
+  background-color: var(--secondary);
+}
+
+.dracula .flexlayout__popup_menu {
+  background-color: var(--popover);
+  color: var(--popover-foreground);
+  border: 1px solid var(--border);
+}
+
+.dracula .flexlayout__popup_menu_item {
+  padding: 4px 8px;
+}
+
+.dracula .flexlayout__popup_menu_item:hover {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.dracula .flexlayout__tab {
+  background-color: transparent;
+  background-image: none !important;
 }
