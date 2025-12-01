@@ -42,11 +42,6 @@ const getLevelIcon = (level: LogLevel) => {
 export default function Logs() {
   return (
     <div className="h-full flex flex-col bg-background text-foreground">
-      <div className="p-4 border-b border-border bg-muted/20">
-        <h2 className="text-lg font-semibold flex items-center gap-2">
-          Logs
-        </h2>
-      </div>
       <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-full w-full">
           <div className="w-full min-w-full inline-block align-middle">
@@ -67,10 +62,10 @@ export default function Logs() {
               <tbody className="divide-y divide-border bg-background">
                 {dummyLogs.map((log, index) => (
                   <tr key={index} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-6 py-2 whitespace-nowrap text-sm text-muted-foreground font-mono">
+                    <td className="px-6 py-2 whitespace-nowrap text-xs text-muted-foreground font-mono">
                       {new Date(log.time).toLocaleString()}
                     </td>
-                    <td className="px-6 py-2 whitespace-nowrap text-sm font-medium flex items-center gap-2">
+                    <td className="px-6 py-2 whitespace-nowrap text-xs font-medium flex items-center gap-2">
                       <span className={getLevelColor(log.level)}>
                         {getLevelIcon(log.level)}
                       </span>
@@ -78,7 +73,7 @@ export default function Logs() {
                         {log.level}
                       </span>
                     </td>
-                    <td className="px-6 py-2 text-sm text-foreground font-mono break-all">
+                    <td className="px-6 py-2 text-xs text-foreground font-mono break-all">
                       {log.message}
                     </td>
                   </tr>
