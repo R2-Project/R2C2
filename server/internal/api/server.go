@@ -8,7 +8,10 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"github.com/mati-olivera/R2C2/internal/config"
+	"github.com/mati-olivera/R2C2/internal/core/auth"
 	"github.com/mati-olivera/R2C2/internal/core/logger"
+	"github.com/mati-olivera/R2C2/internal/database"
 )
 
 var upgrader = websocket.Upgrader{
@@ -51,6 +54,30 @@ func StartServer(port int) error {
 		c.JSON(http.StatusOK, gin.H{
 			"message": "pong",
 		})
+	})
+
+	db := config.DB.GetInstance()
+	authRepository := database.InitOperatorsRepository(db)
+	authService := auth.NewAuthService(authRepository)
+
+	router.POST("/auth/login", func(c *gin.Context) {
+		var loginData struct {
+			Username string `json:"username"`
+			Password string `json:"password"`
+		}
+
+		if err := c.BindJSON(&loginData); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+			return
+		}
+
+		token, err := authService.Login(loginData.Username, loginData.Password)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"token": token})
 	})
 
 	router.GET("/ws", func(c *gin.Context) {

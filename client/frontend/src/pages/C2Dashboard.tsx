@@ -21,33 +21,45 @@ const jsonModel: IJsonModel = {
     type: 'row',
     weight: 100,
     children: [
-      /*
       {
-        type: 'tabset',
-        id: 'topTabset', // ID for the left panel
+        type: 'row',
         weight: 50,
         children: [
           {
-            type: 'tab',
-            name: 'Clients',
-            component: 'clients',
+            type: 'tabset',
+            weight: 60,
+            children: [
+              {
+                type: 'tab',
+                name: 'Listeners',
+                component: 'listeners',
+              },
+            ],
+          },
+          {
+            type: 'tabset',
+            weight: 40,
+            children: [
+              {
+                type: 'tab',
+                name: 'Logs',
+                component: 'logs',
+              },
+            ],
           },
         ],
       },
-      */
       {
         type: 'tabset',
         id: 'bottomTabset', // ID for the main panel
         weight: 50,
         enableDeleteWhenEmpty: false,
         children: [
-          /*
           {
             type: 'tab',
-            name: 'Listeners',
-            component: 'listeners',
+            name: 'Sessions',
+            component: 'sessions',
           },
-          */
         ],
       },
     ],
@@ -89,8 +101,6 @@ export default function C2Dashboard() {
         return <Sessions />;
       case 'listeners':
         return <Listeners onAddView={onAddView} />;
-      case 'newListener':
-        return <NewListener />;
       case 'networkMap':
         return <NetworkMap onAddView={onAddView} />;
       case 'chatbot':
@@ -112,9 +122,6 @@ export default function C2Dashboard() {
         break;
       case 'listeners':
         Icon = Headphones;
-        break;
-      case 'newListener':
-        Icon = Plus;
         break;
       case 'networkMap':
         Icon = Network;

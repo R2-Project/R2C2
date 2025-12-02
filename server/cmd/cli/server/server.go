@@ -6,6 +6,8 @@ import (
 
 	"github.com/mati-olivera/R2C2/internal/api"
 	"github.com/mati-olivera/R2C2/internal/config"
+	"github.com/mati-olivera/R2C2/internal/core/auth"
+	"github.com/mati-olivera/R2C2/internal/database"
 	"github.com/spf13/cobra"
 )
 
@@ -26,13 +28,20 @@ var ServerCmd = &cobra.Command{
 			if configPathFlag == "" {
 				return fmt.Errorf("the --config flag with the configuration file path is required")
 			}
-			conf, err := config.GetConfig(configPathFlag)
+			conf, err := config.LoadConfig(configPathFlag)
 			if err != nil {
 				return fmt.Errorf("failed to get configuration: %w", err)
 			}
-			_, err = config.InitDatabase(conf.DatabasePath)
+			db, err := config.InitDatabase(conf.DatabasePath)
 			if err != nil {
 				return fmt.Errorf("failed to initialize database: %w", err)
+			}
+
+			authRepo := database.InitOperatorsRepository(db.GetInstance())
+			authService := auth.NewAuthService(authRepo)
+			_, err = authService.LoadOperator(conf)
+			if err != nil {
+				return fmt.Errorf("failed to load default operator: %w", err)
 			}
 
 			err = api.StartServer(conf.Api.Port)

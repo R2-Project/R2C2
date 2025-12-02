@@ -9,12 +9,15 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+var DB *Database
+
 func InitDatabase(path string) (*Database, error) {
 	db := &Database{}
 	err := db.Init(path)
 	if err != nil {
 		return nil, err
 	}
+	DB = db
 	return db, nil
 }
 
@@ -22,6 +25,17 @@ type Database struct {
 	running bool
 	db      *sql.DB
 	path    string
+}
+
+func (d *Database) GetInstance() *sql.DB {
+	return d.db
+}
+
+func (d *Database) CloseDB() error {
+	if d.db != nil {
+		return d.db.Close()
+	}
+	return nil
 }
 
 func (d *Database) Init(path string) error {
@@ -47,7 +61,6 @@ func (d *Database) Init(path string) error {
 		logger.Fatal("error opening database path:", err)
 	}
 	d.db = db
-	defer db.Close()
 
 	err = d.createListenersTable()
 	if err != nil {
@@ -106,7 +119,8 @@ func (d *Database) createOperatorsTable() error {
 		"id" TEXT NOT NULL PRIMARY KEY,
 		"username" TEXT,
 		"password_hash" TEXT,
-		"timestamp" DATETIME DEFAULT CURRENT_TIMESTAMP
+		"last_login" DATETIME,
+		"created_at" DATETIME
 	);`
 
 	statement, err := d.db.Prepare(createTableSQL)

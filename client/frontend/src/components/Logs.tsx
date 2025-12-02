@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { AlertCircle, Info, AlertTriangle, Bug } from "lucide-react";
+import { AlertCircle, Info, AlertTriangle, Bug, CheckCircle } from "lucide-react";
 
-type LogLevel = "info" | "debug" | "error" | "warning";
+type LogLevel = "info" | "debug" | "error" | "warning" | "success";
 
 interface LogEntry {
   time: string;
@@ -18,6 +18,12 @@ const dummyLogs: LogEntry[] = [
   { time: "2023-10-27T10:02:15Z", level: "error", message: "Failed to connect to database" },
   { time: "2023-10-27T10:03:00Z", level: "info", message: "User logged in" },
   { time: "2023-10-27T10:05:00Z", level: "debug", message: "Processing request ID: 12345" },
+  { time: "2023-10-27T10:06:00Z", level: "success", message: "Database backup completed successfully" },
+  ...Array.from({ length: 50 }).map((_, i) => ({
+    time: new Date(Date.now() - (50 - i) * 1000).toISOString(),
+    level: ["info", "debug", "warning", "error", "success"][Math.floor(Math.random() * 5)] as LogLevel,
+    message: `Generated log entry #${i + 1} for testing scroll behavior`
+  })),
 ];
 
 const getLevelColor = (level: LogLevel) => {
@@ -26,6 +32,7 @@ const getLevelColor = (level: LogLevel) => {
     case "debug": return "text-gray-400";
     case "warning": return "text-yellow-400";
     case "error": return "text-red-400";
+    case "success": return "text-green-400";
     default: return "text-white";
   }
 };
@@ -36,19 +43,26 @@ const getLevelIcon = (level: LogLevel) => {
     case "debug": return <Bug className="w-4 h-4" />;
     case "warning": return <AlertTriangle className="w-4 h-4" />;
     case "error": return <AlertCircle className="w-4 h-4" />;
+    case "success": return <CheckCircle className="w-4 h-4" />;
   }
 };
 
 export default function Logs() {
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, []);
+
   return (
     <div className="h-full flex flex-col bg-background text-foreground">
       <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-full w-full">
           <div className="w-full min-w-full inline-block align-middle">
             <table className="min-w-full divide-y divide-border">
-              <thead className="bg-muted/50 sticky top-0">
+              <thead className="bg-muted sticky top-0 z-10">
                 <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider w-48">
+                  <th scope="col" className="px-2 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider w-36">
                     Time
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider w-32">
@@ -62,7 +76,7 @@ export default function Logs() {
               <tbody className="divide-y divide-border bg-background">
                 {dummyLogs.map((log, index) => (
                   <tr key={index} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-6 py-2 whitespace-nowrap text-xs text-muted-foreground font-mono">
+                    <td className="px-2 py-2 whitespace-nowrap text-xs text-muted-foreground font-mono">
                       {new Date(log.time).toLocaleString()}
                     </td>
                     <td className="px-6 py-2 whitespace-nowrap text-xs font-medium flex items-center gap-2">
@@ -80,6 +94,7 @@ export default function Logs() {
                 ))}
               </tbody>
             </table>
+            <div ref={bottomRef} />
           </div>
         </ScrollArea>
       </div>
