@@ -20,8 +20,10 @@ export default function Login({ onLogin }: LoginProps) {
   const { toast } = useToast();
 
   const handleDevLogin = () => {
-    localStorage.setItem("isAuthenticated", "true");
+    // localStorage.setItem("isAuthenticated", "true"); // Removed
     localStorage.setItem("username", "developer");
+    // For dev login, we might need a mock token or handle it differently in App.tsx
+    localStorage.setItem("token", "dev-token"); 
     onLogin();
     setLocation("/");
   };
@@ -58,7 +60,6 @@ export default function Login({ onLogin }: LoginProps) {
              throw new Error("No token received from server");
         }
 
-        localStorage.setItem("isAuthenticated", "true");
         localStorage.setItem("serverUrl", baseUrl);
         localStorage.setItem("username", username);
         localStorage.setItem("token", token);

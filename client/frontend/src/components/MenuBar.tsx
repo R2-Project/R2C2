@@ -36,6 +36,17 @@ export default function MenuBar({ onAddView }: { onAddView: (componentName: stri
                 Preferences
               </DropdownMenuItem>
               <DropdownMenuSeparator className="c2-border" />
+              <DropdownMenuItem 
+                className="hover:c2-bg-dark focus:c2-bg-dark"
+                onClick={() => {
+                  localStorage.removeItem("token");
+                  localStorage.removeItem("username");
+                  localStorage.removeItem("serverUrl");
+                  window.location.reload();
+                }}
+              >
+                Logout
+              </DropdownMenuItem>
               <DropdownMenuItem className="hover:c2-bg-dark focus:c2-bg-dark">
                 Exit
               </DropdownMenuItem>

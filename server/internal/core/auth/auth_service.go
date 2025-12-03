@@ -34,12 +34,12 @@ func (s *AuthService) Login(username string, password string) (*string, error) {
 	}
 
 	claims := jwt.MapClaims{
-		"sub": operator.ID,
-		"exp": time.Now().Add(time.Hour * 12).Unix(),
+		"operator_id": operator.ID,
+		"username":    operator.Username,
+		"exp":         time.Now().Add(time.Hour * 12).Unix(),
+		"iat":         time.Now().Unix(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
-	// TODO: save last login
 
 	conf := config.GetConfig()
 
@@ -47,6 +47,9 @@ func (s *AuthService) Login(username string, password string) (*string, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// TODO: save last login
+
 	return &tokenStr, nil
 }
 
@@ -76,4 +79,29 @@ func (s *AuthService) LoadOperator(cfg *config.Config) (*operators.Operator, err
 	logger.Info(fmt.Sprintf("Operator '%s' loaded", operator.Username))
 
 	return &operator, nil
+}
+
+type OperatorClaims struct {
+	OperatorID string `json:"operator_id"`
+	Username   string `json:"username"`
+	jwt.RegisteredClaims
+}
+
+func ValidateToken(tokenString string, secret string) (*OperatorClaims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &OperatorClaims{}, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(secret), nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if claims, ok := token.Claims.(*OperatorClaims); ok && token.Valid {
+		return claims, nil
+	}
+
+	return nil, ErrInvalidTokenClaims
 }

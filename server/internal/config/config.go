@@ -38,7 +38,7 @@ func LoadConfig(path string) (*Config, error) {
 		cfg = &tempCfg
 
 		if cfg.JWTSecret == "" {
-			secret, err := cripto.GenerateRandomHexString(32)
+			secret, err := cripto.GenerateRandomHexString(38)
 			if err != nil {
 				log.Fatalf("error generating jwt secret: %v", err)
 			}

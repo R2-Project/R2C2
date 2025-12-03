@@ -8,14 +8,15 @@ import NotFound from "@/pages/not-found";
 import C2Dashboard from "@/pages/C2Dashboard";
 import Login from "@/pages/Login";
 import { useState, useEffect } from "react";
+import { WebSocketProvider } from "@/lib/websocket-context";
 
 function Router() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const auth = localStorage.getItem("isAuthenticated") === "true";
-    setIsAuthenticated(auth);
+    const token = localStorage.getItem("token");
+    setIsAuthenticated(!!token);
     setIsLoading(false);
   }, []);
 
@@ -28,10 +29,12 @@ function Router() {
   }
 
   return (
-    <Switch>
-      <Route path="/" component={C2Dashboard} />
-      <Route component={NotFound} />
-    </Switch>
+    <WebSocketProvider>
+      <Switch>
+        <Route path="/" component={C2Dashboard} />
+        <Route component={NotFound} />
+      </Switch>
+    </WebSocketProvider>
   );
 }
 

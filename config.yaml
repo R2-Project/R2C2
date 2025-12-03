@@ -5,6 +5,5 @@ operators:
     - username: anakin
       password: admin123
 database_path: ../db/r2c2.db
+jwt_secret: 1678fba3363fba72e4f3bb861e1c2d1639b94cc8b3cb7fb7b5e24df62ed82c8b
 
-# if doesn't exists will be generated automatically
-jwt_secret: a6a3581fee9587e6fecc72175fb3eb7e35d64c77529a85542114c2e0f0483a53

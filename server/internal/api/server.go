@@ -80,15 +80,25 @@ func StartServer(port int) error {
 		c.JSON(http.StatusOK, gin.H{"token": token})
 	})
 
-	router.GET("/ws", func(c *gin.Context) {
+	router.GET("/ws", WebSocketAuth(config.GetConfig().JWTSecret), func(c *gin.Context) {
 		conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 		if err != nil {
+			logger.Error("Failed to set websocket upgrade", err)
 			return
 		}
 
-		hub.AddClient(conn)
+		client := &Client{
+			Hub:      hub,
+			Conn:     conn,
+			Username: c.GetString("username"),
+			Send:     make(chan []byte, 256),
+		}
 
-		logger.Info("Operator X connected", "remote_addr", conn.RemoteAddr().String())
+		hub.Register <- client
+
+		go client.WritePump()
+
+		client.ReadPump()
 	})
 
 	sport := strconv.Itoa(port)

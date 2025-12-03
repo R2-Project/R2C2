@@ -1,60 +1,54 @@
 package api
 
 import (
-	"github.com/gorilla/websocket"
+	"fmt"
 	"sync"
+
+	"github.com/mati-olivera/R2C2/internal/core/logger"
 )
 
 type Hub struct {
-	clients    map[*websocket.Conn]bool
-	broadcast  chan []byte
-	register   chan *websocket.Conn
-	unregister chan *websocket.Conn
+	clients    map[*Client]bool
+	Broadcast  chan []byte
+	Register   chan *Client
+	unregister chan *Client
 	mutex      sync.Mutex
 }
 
 func NewHub() *Hub {
 	return &Hub{
-		broadcast:  make(chan []byte),
-		register:   make(chan *websocket.Conn),
-		unregister: make(chan *websocket.Conn),
-		clients:    make(map[*websocket.Conn]bool),
+		Broadcast:  make(chan []byte),
+		Register:   make(chan *Client),
+		unregister: make(chan *Client),
+		clients:    make(map[*Client]bool),
 	}
 }
 
 func (h *Hub) Run() {
 	for {
 		select {
-		case client := <-h.register:
-			h.mutex.Lock()
+		case client := <-h.Register:
 			h.clients[client] = true
-			h.mutex.Unlock()
+			logger.Info(fmt.Sprintf("Operator %s has joined", client.Username))
 
 		case client := <-h.unregister:
-			h.mutex.Lock()
 			if _, ok := h.clients[client]; ok {
+				logger.Info(fmt.Sprintf("Operator %s has left", client.Username))
 				delete(h.clients, client)
-				client.Close()
+				close(client.Send)
 			}
-			h.mutex.Unlock()
 
-		case message := <-h.broadcast:
-			h.mutex.Lock()
+		case message := <-h.Broadcast:
 			for client := range h.clients {
-				// Write the JSON message to the websocket
-				err := client.WriteMessage(websocket.TextMessage, message)
-				if err != nil {
-					client.Close()
+				select {
+				case client.Send <- message:
+				default:
+					close(client.Send)
 					delete(h.clients, client)
 				}
 			}
-			h.mutex.Unlock()
 		}
 	}
-}
-
-func (h *Hub) AddClient(client *websocket.Conn) {
-	h.register <- client
 }
 
 type LogAdapter struct {
@@ -66,6 +60,6 @@ func (w *LogAdapter) Write(p []byte) (n int, err error) {
 	msg := make([]byte, len(p))
 	copy(msg, p)
 
-	w.Hub.broadcast <- msg
+	w.Hub.Broadcast <- msg
 	return len(p), nil
 }
