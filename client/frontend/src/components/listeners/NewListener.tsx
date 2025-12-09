@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-import { createHttpListener } from "@/services/listeners"
+// import { createHttpListener } from "@/global/services/listeners"
 
 type Props = {
   open: boolean
@@ -67,12 +67,12 @@ export default function NewListener({ open, onOpenChange, onCreated }: Props) {
 
     setLoading(true)
     try {
-      await createHttpListener({
-        name: name.trim(),
-        host: url,
-        port: Number(port),
-        secure: useSSL,
-      })
+      // await createHttpListener({
+      //   name: name.trim(),
+      //   host: url,
+      //   port: Number(port),
+      //   secure: useSSL,
+      // })
       setSuccess("Listener created")
       setName("")
       setHost("")

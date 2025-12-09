@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/global/hooks/use-toast";
 import R2C2Logo from "@/assets/images/r2c2-1.jpeg";
+import { useAuth } from "@/global/hooks/useAuth";
 
 interface LoginProps {
   onLogin: () => void;
@@ -18,14 +19,10 @@ export default function Login({ onLogin }: LoginProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { setIsLogged, authenticate } = useAuth();
 
   const handleDevLogin = () => {
-    // localStorage.setItem("isAuthenticated", "true"); // Removed
-    localStorage.setItem("username", "developer");
-    // For dev login, we might need a mock token or handle it differently in App.tsx
-    localStorage.setItem("token", "dev-token"); 
-    onLogin();
-    setLocation("/");
+    authenticate();
   };
 
   const handleLogin = async (e: React.FormEvent) => {
