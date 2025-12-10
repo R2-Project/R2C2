@@ -1,16 +1,17 @@
 package main
 
 import (
+	"client/networking"
 	"context"
-	"fmt"
+
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-// App struct
 type App struct {
-	ctx context.Context
+	ctx        context.Context
+	secureConn *networking.SecureWebSocket
 }
 
-// NewApp creates a new App application struct
 func NewApp() *App {
 	return &App{}
 }
@@ -21,7 +22,19 @@ func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 }
 
-// Greet returns a greeting for the given name
-func (a *App) Greet(name string) string {
-	return fmt.Sprintf("Hello %s, It's show time!", name)
+func (a *App) Request(method string, url string, headers map[string]string, body string) networking.Response {
+	return networking.Request(method, url, headers, body)
+}
+
+func (a *App) ListenC2Events(secureConn *networking.SecureWebSocket) {
+	for {
+		_, message, err := secureConn.Conn.ReadMessage()
+		if err != nil {
+			runtime.EventsEmit(a.ctx, "network:error", err.Error())
+			// TODO: reconnection logic?
+			break
+		}
+
+		runtime.EventsEmit(a.ctx, "c2:event", string(message))
+	}
 }

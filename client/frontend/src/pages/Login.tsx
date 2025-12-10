@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useToast } from "@/global/hooks/use-toast";
 import R2C2Logo from "@/assets/images/r2c2-1.jpeg";
 import { useAuth } from "@/global/hooks/useAuth";
+import { Login as AppLogin } from '../../wailsjs/go/main/App';
 
 interface LoginProps {
   onLogin: () => void;
@@ -30,53 +31,25 @@ export default function Login({ onLogin }: LoginProps) {
     setIsLoading(true);
 
     try {
-        let baseUrl = serverUrl.trim();
-        if (!baseUrl.startsWith("http://") && !baseUrl.startsWith("https://")) {
-            baseUrl = `http://${baseUrl}`;
-        }
-        // Remove trailing slash if present
-        baseUrl = baseUrl.replace(/\/$/, "");
 
-        const response = await fetch(`${baseUrl}/auth/login`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ username, password }),
-        });
+      await AppLogin(serverUrl, username, password);
 
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.message || "Login failed");
-        }
-
-        const data = await response.json();
-        const token = data.token; 
-
-        if (!token) {
-             throw new Error("No token received from server");
-        }
-
-        localStorage.setItem("serverUrl", baseUrl);
-        localStorage.setItem("username", username);
-        localStorage.setItem("token", token);
-        
-        toast({
-            title: "Login successful",
-            description: "Welcome back!",
-        });
-        onLogin();
-        setLocation("/");
+      toast({
+        title: "Login successful",
+        description: "Welcome back!",
+      });
+      onLogin();
+      setLocation("/");
 
     } catch (error: any) {
-        console.error("Login error:", error);
-        toast({
-            title: "Login failed",
-            description: error.message || "An error occurred during login",
-            variant: "destructive",
-        });
+      console.error("Login error:", error);
+      toast({
+        title: "Login failed",
+        description: error.message || "An error occurred during login",
+        variant: "destructive",
+      });
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -128,9 +101,9 @@ export default function Login({ onLogin }: LoginProps) {
             <Button className="w-full" type="submit" disabled={isLoading}>
               {isLoading ? "Logging in..." : "Login"}
             </Button>
-            <Button 
-              variant="ghost" 
-              className="w-full text-xs text-muted-foreground hover:text-primary" 
+            <Button
+              variant="ghost"
+              className="w-full text-xs text-muted-foreground hover:text-primary"
               onClick={handleDevLogin}
               type="button"
             >
