@@ -9,11 +9,7 @@ import R2C2Logo from "@/assets/images/r2c2-1.jpeg";
 import { useAuth } from "@/global/hooks/useAuth";
 import { Login as AppLogin } from '../../wailsjs/go/main/App';
 
-interface LoginProps {
-  onLogin: () => void;
-}
-
-export default function Login({ onLogin }: LoginProps) {
+export default function Login() {
   const [serverUrl, setServerUrl] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -31,15 +27,50 @@ export default function Login({ onLogin }: LoginProps) {
     setIsLoading(true);
 
     try {
+      let token;
 
-      await AppLogin(serverUrl, username, password);
+      // Check if running in Wails environment
+      if ((window as any)['go']?.main?.App?.Login) {
+        token = await AppLogin(serverUrl, username, password);
+      } else {
+        // Fallback for browser environment
+        let baseUrl = serverUrl.trim();
+        if (!baseUrl.startsWith("http://") && !baseUrl.startsWith("https://")) {
+            baseUrl = `http://${baseUrl}`;
+        }
+        baseUrl = baseUrl.replace(/\/$/, "");
 
-      toast({
-        title: "Login successful",
-        description: "Welcome back!",
-      });
-      onLogin();
-      setLocation("/");
+        const response = await fetch(`${baseUrl}/auth/login`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ username, password }),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || "Login failed");
+        }
+
+        const data = await response.json();
+        token = data.token;
+      }
+
+      if (token) {
+        localStorage.setItem("token", token);
+        localStorage.setItem("serverUrl", serverUrl);
+        localStorage.setItem("username", username);
+        setIsLogged(true);
+        
+        toast({
+          title: "Login successful",
+          description: "Welcome back!",
+        });
+        setLocation("/");
+      } else {
+        throw new Error("No token received");
+      }
 
     } catch (error: any) {
       console.error("Login error:", error);

@@ -51,7 +51,7 @@ func (a *App) Login(serverURL string, username string, password string) (string,
 		return "", fmt.Errorf("login successful, but websocket failed: %w", err)
 	}
 
-	return "Login Successful", nil
+	return token, nil
 }
 
 type authResponse struct {

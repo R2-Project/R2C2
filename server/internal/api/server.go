@@ -10,6 +10,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/mati-olivera/R2C2/internal/config"
 	"github.com/mati-olivera/R2C2/internal/core/auth"
+	"github.com/mati-olivera/R2C2/internal/core/listeners"
 	"github.com/mati-olivera/R2C2/internal/core/logger"
 	"github.com/mati-olivera/R2C2/internal/database"
 )
@@ -28,6 +29,9 @@ func StartServer(port int) error {
 	hubWriter := &LogAdapter{Hub: hub}
 	logger.AttachWebsocketWriter(hubWriter)
 	logger.Info("Websocket log adapter attached")
+
+	listenersRepo := database.InitListenersRepository(config.DB.GetInstance())
+	listenersService := listeners.NewListenersService(listenersRepo)
 
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
@@ -99,6 +103,27 @@ func StartServer(port int) error {
 		go client.WritePump()
 
 		client.ReadPump()
+	})
+
+	router.GET("/listeners", func(c *gin.Context) {
+		listeners := listenersService.GetListeners()
+		c.JSON(http.StatusOK, listeners)
+	})
+
+	router.POST("/listeners", func(c *gin.Context) {
+
+		var newListenerRequest listeners.NewHttpListenerRequest
+		if err := c.BindJSON(&newListenerRequest); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+			return
+		}
+		listener, err := listenersService.CreateHttpListener(newListenerRequest)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusCreated, listener)
 	})
 
 	sport := strconv.Itoa(port)

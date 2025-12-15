@@ -1,6 +1,7 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AlertCircle, Info, AlertTriangle, Bug, CheckCircle } from "lucide-react";
+import { EventsOn } from '../../wailsjs/runtime/runtime';
 
 type LogLevel = "info" | "debug" | "error" | "warning" | "success";
 
@@ -10,21 +11,6 @@ interface LogEntry {
   message: string;
   [key: string]: any;
 }
-
-const dummyLogs: LogEntry[] = [
-  { time: "2023-10-27T10:00:00Z", level: "info", message: "System initialized" },
-  { time: "2023-10-27T10:00:05Z", level: "debug", message: "Loading modules..." },
-  { time: "2023-10-27T10:01:20Z", level: "warning", message: "High memory usage detected" },
-  { time: "2023-10-27T10:02:15Z", level: "error", message: "Failed to connect to database" },
-  { time: "2023-10-27T10:03:00Z", level: "info", message: "User logged in" },
-  { time: "2023-10-27T10:05:00Z", level: "debug", message: "Processing request ID: 12345" },
-  { time: "2023-10-27T10:06:00Z", level: "success", message: "Database backup completed successfully" },
-  ...Array.from({ length: 50 }).map((_, i) => ({
-    time: new Date(Date.now() - (50 - i) * 1000).toISOString(),
-    level: ["info", "debug", "warning", "error", "success"][Math.floor(Math.random() * 5)] as LogLevel,
-    message: `Generated log entry #${i + 1} for testing scroll behavior`
-  })),
-];
 
 const getLevelColor = (level: LogLevel) => {
   switch (level) {
@@ -48,11 +34,53 @@ const getLevelIcon = (level: LogLevel) => {
 };
 
 export default function Logs() {
+  const [logs, setLogs] = useState<LogEntry[]>([]);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    // Subscribe to c2:event
+    const cancelC2Event = EventsOn("c2:event", (message: string) => {
+      try {
+        const logEntry: LogEntry = JSON.parse(message);
+        // Ensure time is present, if not add current time
+        if (!logEntry.time) {
+            logEntry.time = new Date().toISOString();
+        }
+        // Ensure level is valid
+        if (!["info", "debug", "error", "warning", "success"].includes(logEntry.level)) {
+            logEntry.level = "info";
+        }
+        
+        setLogs((prevLogs) => [...prevLogs, logEntry]);
+      } catch (e) {
+        console.error("Failed to parse log message:", message, e);
+        // Optionally add a raw log entry if parsing fails
+        setLogs((prevLogs) => [...prevLogs, {
+            time: new Date().toISOString(),
+            level: "info",
+            message: message
+        }]);
+      }
+    });
+
+    const cancelNetworkError = EventsOn("network:error", (error: string) => {
+        console.error("Network error:", error);
+        setLogs((prevLogs) => [...prevLogs, {
+            time: new Date().toISOString(),
+            level: "error",
+            message: `Network Error: ${error}`
+        }]);
+    });
+
+    return () => {
+      cancelC2Event();
+      cancelNetworkError();
+    };
   }, []);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [logs]);
 
   return (
     <div className="h-full flex flex-col bg-background text-foreground">
@@ -74,7 +102,7 @@ export default function Logs() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border bg-background">
-                {dummyLogs.map((log, index) => (
+                {logs.map((log, index) => (
                   <tr key={index} className="hover:bg-muted/30 transition-colors">
                     <td className="px-2 py-2 whitespace-nowrap text-xs text-muted-foreground font-mono">
                       {new Date(log.time).toLocaleString()}
