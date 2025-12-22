@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/global/hooks/use-toast";
 
 interface WebSocketContextType {
   socket: WebSocket | null;

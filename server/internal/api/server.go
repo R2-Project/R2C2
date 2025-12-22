@@ -10,6 +10,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/mati-olivera/R2C2/internal/config"
 	"github.com/mati-olivera/R2C2/internal/core/auth"
+	"github.com/mati-olivera/R2C2/internal/core/listeners"
 	"github.com/mati-olivera/R2C2/internal/core/logger"
 	"github.com/mati-olivera/R2C2/internal/database"
 )
@@ -28,6 +29,9 @@ func StartServer(port int) error {
 	hubWriter := &LogAdapter{Hub: hub}
 	logger.AttachWebsocketWriter(hubWriter)
 	logger.Info("Websocket log adapter attached")
+
+	listenersRepo := database.InitListenersRepository(config.DB.GetInstance())
+	listenersService := listeners.NewListenersService(listenersRepo)
 
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
@@ -58,6 +62,7 @@ func StartServer(port int) error {
 
 	db := config.DB.GetInstance()
 	authRepository := database.InitOperatorsRepository(db)
+	operatorsRepository := database.InitOperatorsRepository(db)
 	authService := auth.NewAuthService(authRepository)
 
 	router.POST("/auth/login", func(c *gin.Context) {
@@ -99,6 +104,29 @@ func StartServer(port int) error {
 		go client.WritePump()
 
 		client.ReadPump()
+	})
+
+	router.GET("/listeners", HttpAuth(config.GetConfig().JWTSecret, *operatorsRepository), func(c *gin.Context) {
+		listeners := listenersService.GetListeners()
+		c.JSON(http.StatusOK, listeners)
+	})
+
+	router.POST("/listeners", HttpAuth(config.GetConfig().JWTSecret, *operatorsRepository), func(c *gin.Context) {
+
+		//TODO: handle multiple listener types
+
+		var newListenerRequest listeners.NewHttpListenerRequest
+		if err := c.BindJSON(&newListenerRequest); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+			return
+		}
+		listener, err := listenersService.CreateHttpListener(newListenerRequest)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusCreated, listener)
 	})
 
 	sport := strconv.Itoa(port)
