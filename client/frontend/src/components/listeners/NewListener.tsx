@@ -13,8 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-
-import { createHttpListener } from "@/services/listeners"
+import { Request } from '../../../wailsjs/go/main/App';
 
 type Props = {
   open: boolean
@@ -51,39 +50,40 @@ export default function NewListener({ open, onOpenChange, onCreated }: Props) {
       return
     }
 
-    /*
-    let headers: Record<string, string> | undefined
-    try {
-      headers = headersText ? JSON.parse(headersText) : undefined
-      if (headers && typeof headers !== "object") throw new Error("headers must be an object")
-    } catch (e: any) {
-      setError("Invalid headers JSON: " + e.message)
-      return
-    }
-      */
-
-    const protocol = useSSL ? "https" : "http"
-    const url = `${protocol}://${host}:${port}`
-
     setLoading(true)
     try {
-      await createHttpListener({
+      const serverUrl = localStorage.getItem("serverUrl");
+      if (!serverUrl) {
+        throw new Error("Server URL not found");
+      }
+
+      const payload = {
         name: name.trim(),
-        host: url,
+        type: listenerType,
+        host: host.trim(),
         port: Number(port),
+        uris: uris.split("\n").map((u) => u.trim()).filter((u) => u !== ""),
         secure: useSSL,
-      })
-      setSuccess("Listener created")
-      setName("")
-      setHost("")
-      setPort("")
-      setListenerType("http")
-      setUseSSL(false)
-      setHeadersText("Content-Type: application/json")
-      setUrisText("/index.php")
-      onCreated?.()
-      // close after a short delay so user sees success
-      setTimeout(() => onOpenChange(false), 600)
+        response_headers: headersText.split("\n").map((h) => h.trim()).filter((h) => h !== "")
+      }
+
+      const response = await Request("POST", `${serverUrl}/listeners`, {}, JSON.stringify(payload));
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        setSuccess("Listener created")
+        setName("")
+        setHost("")
+        setPort("")
+        setListenerType("http")
+        setUseSSL(false)
+        setHeadersText("Content-Type: application/json")
+        setUrisText("/index.php")
+        onCreated?.()
+        // close after a short delay so user sees success
+        setTimeout(() => onOpenChange(false), 600)
+      } else {
+        throw new Error(response.error || `Failed to create listener: ${response.statusCode}`);
+      }
     } catch (e: any) {
       setError(e?.message || "Failed to create listener")
     } finally {

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/mati-olivera/R2C2/internal/core/logger"
 )
 
 type Listener struct {
@@ -66,6 +67,8 @@ func (l *ListenersService) CreateHttpListener(request NewHttpListenerRequest) (*
 	if err != nil {
 		return nil, fmt.Errorf("Failed to save listener: %w", err)
 	}
+
+	logger.Info(fmt.Sprintf("HTTP Listener '%s' created", httpListener.Name), httpListener.Host, httpListener.Port)
 
 	// TODO: go httpListener.Start()
 

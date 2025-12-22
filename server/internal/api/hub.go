@@ -60,6 +60,8 @@ func (w *LogAdapter) Write(p []byte) (n int, err error) {
 	msg := make([]byte, len(p))
 	copy(msg, p)
 
-	w.Hub.Broadcast <- msg
+	go func() {
+		w.Hub.Broadcast <- msg
+	}()
 	return len(p), nil
 }

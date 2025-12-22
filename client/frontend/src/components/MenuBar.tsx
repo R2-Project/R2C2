@@ -8,7 +8,7 @@ import {
   DropdownMenuCheckboxItem
 } from "@/components/ui/dropdown-menu";
 import NewSession from '@/components/menu/NewSession'
-import { useTheme } from "@/components/theme-provider"
+import { useTheme } from "@/global/hooks/useTheme"
 
 interface TopMenuProps {
   onAddView: (componentType: string, title: string) => void;
@@ -18,7 +18,7 @@ export default function MenuBar({ onAddView }: { onAddView: (componentName: stri
   const [connectionStatus, setConnectionStatus] = useState("Connected");
   const [activeSessions, setActiveSessions] = useState(3);
   const [newSessionDialogOpen, setNewSessionDialogOpen] = useState(false);
-  const { setTheme } = useTheme()
+  const { setTheme, themes } = useTheme()
 
   return (
     <>
@@ -75,9 +75,17 @@ export default function MenuBar({ onAddView }: { onAddView: (componentName: stri
               Theme
             </DropdownMenuTrigger>
             <DropdownMenuContent className="c2-bg-panel c2-border border min-w-32">
-              <DropdownMenuItem onClick={() => setTheme("dracula")} className="hover:c2-bg-dark focus:c2-bg-dark">
-                Dracula
-              </DropdownMenuItem>
+              {
+                themes.map( ( theme ) => (
+                  <DropdownMenuItem 
+                    key={ theme } 
+                    className="hover:c2-bg-dark focus:c2-bg-dark focus:text-white"
+                    onClick={ () => setTheme( theme ) }
+                  >
+                    { theme.charAt(0).toUpperCase() + theme.slice(1) }
+                  </DropdownMenuItem>
+                ) )
+              }
             </DropdownMenuContent>
           </DropdownMenu>
 

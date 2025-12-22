@@ -4,28 +4,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/global/hooks/use-toast";
 import R2C2Logo from "@/assets/images/r2c2-1.jpeg";
+import { useAuth } from "@/global/hooks/useAuth";
+import { Login as AppLogin } from '../../wailsjs/go/main/App';
 
-interface LoginProps {
-  onLogin: () => void;
-}
-
-export default function Login({ onLogin }: LoginProps) {
+export default function Login() {
   const [serverUrl, setServerUrl] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { setIsLogged, authenticate } = useAuth();
 
   const handleDevLogin = () => {
-    // localStorage.setItem("isAuthenticated", "true"); // Removed
-    localStorage.setItem("username", "developer");
-    // For dev login, we might need a mock token or handle it differently in App.tsx
-    localStorage.setItem("token", "dev-token"); 
-    onLogin();
-    setLocation("/");
+    authenticate();
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -33,11 +27,17 @@ export default function Login({ onLogin }: LoginProps) {
     setIsLoading(true);
 
     try {
+      let token;
+
+      // Check if running in Wails environment
+      if ((window as any)['go']?.main?.App?.Login) {
+        token = await AppLogin(serverUrl, username, password);
+      } else {
+        // Fallback for browser environment
         let baseUrl = serverUrl.trim();
         if (!baseUrl.startsWith("http://") && !baseUrl.startsWith("https://")) {
             baseUrl = `http://${baseUrl}`;
         }
-        // Remove trailing slash if present
         baseUrl = baseUrl.replace(/\/$/, "");
 
         const response = await fetch(`${baseUrl}/auth/login`, {
@@ -54,32 +54,33 @@ export default function Login({ onLogin }: LoginProps) {
         }
 
         const data = await response.json();
-        const token = data.token; 
+        token = data.token;
+      }
 
-        if (!token) {
-             throw new Error("No token received from server");
-        }
-
-        localStorage.setItem("serverUrl", baseUrl);
-        localStorage.setItem("username", username);
+      if (token) {
         localStorage.setItem("token", token);
+        localStorage.setItem("serverUrl", serverUrl);
+        localStorage.setItem("username", username);
+        setIsLogged(true);
         
         toast({
-            title: "Login successful",
-            description: "Welcome back!",
+          title: "Login successful",
+          description: "Welcome back!",
         });
-        onLogin();
         setLocation("/");
+      } else {
+        throw new Error("No token received");
+      }
 
     } catch (error: any) {
-        console.error("Login error:", error);
-        toast({
-            title: "Login failed",
-            description: error.message || "An error occurred during login",
-            variant: "destructive",
-        });
+      console.error("Login error:", error);
+      toast({
+        title: "Login failed",
+        description: error.message || "An error occurred during login",
+        variant: "destructive",
+      });
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -131,9 +132,9 @@ export default function Login({ onLogin }: LoginProps) {
             <Button className="w-full" type="submit" disabled={isLoading}>
               {isLoading ? "Logging in..." : "Login"}
             </Button>
-            <Button 
-              variant="ghost" 
-              className="w-full text-xs text-muted-foreground hover:text-primary" 
+            <Button
+              variant="ghost"
+              className="w-full text-xs text-muted-foreground hover:text-primary"
               onClick={handleDevLogin}
               type="button"
             >
