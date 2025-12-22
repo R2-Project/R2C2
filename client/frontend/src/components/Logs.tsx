@@ -41,7 +41,23 @@ export default function Logs() {
     // Subscribe to c2:event
     const cancelC2Event = EventsOn("c2:event", (message: string) => {
       try {
-        const logEntry: LogEntry = JSON.parse(message);
+        const logEntry: any = JSON.parse(message);
+        
+        // Handle zerolog 'msg' field
+        if (!logEntry.message && logEntry.msg) {
+            logEntry.message = logEntry.msg;
+        }
+
+        // Handle zerolog 'error' field
+        if (logEntry.error) {
+            logEntry.message = `${logEntry.message || ''} Error: ${logEntry.error}`;
+        }
+
+        // Handle zerolog levels
+        if (logEntry.level === 'warn') logEntry.level = 'warning';
+        if (logEntry.level === 'fatal') logEntry.level = 'error';
+        if (logEntry.level === 'panic') logEntry.level = 'error';
+
         // Ensure time is present, if not add current time
         if (!logEntry.time) {
             logEntry.time = new Date().toISOString();

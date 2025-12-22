@@ -4,7 +4,6 @@ import { Model, Actions, TabNode, IJsonModel, Layout, DockLocation, TabSetNode, 
 import Sessions from '@/components/Sessions';
 import NetworkMap from '@/components/NetworkMap';
 import Listeners from '@/components/listeners/Listeners';
-import NewListener from '@/components/listeners/NewListener';
 import AIChatbot from '@/components/AIChatbot';
 import Logs from '@/components/Logs';
 import 'flexlayout-react/style/dark.css';

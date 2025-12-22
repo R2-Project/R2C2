@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/mati-olivera/R2C2/internal/core/auth"
+	"github.com/mati-olivera/R2C2/internal/database"
 )
 
 func WebSocketAuth(jwtSecret string) gin.HandlerFunc {
@@ -35,33 +36,33 @@ func WebSocketAuth(jwtSecret string) gin.HandlerFunc {
 	}
 }
 
-// func HttpAuth(jwtSecret string, authRepository auth.OperatorsRepository) gin.HandlerFunc {
-// 	return func(c *gin.Context) {
-// 		tokenString := c.GetHeader("Authorization")
-//
-// 		if tokenString == "" {
-// 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-// 			c.Abort()
-// 			return
-// 		}
-//
-// 		claims, err := auth.ValidateToken(tokenString, jwtSecret)
-// 		if err != nil {
-// 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
-// 			c.Abort()
-// 			return
-// 		}
-//
-// 		operator, err := authRepository.GetOperatorById(claims.OperatorID)
-// 		if err != nil || operator == nil {
-// 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Operator not found"})
-// 			c.Abort()
-// 			return
-// 		}
-//
-// 		c.Set("operator_id", claims.OperatorID)
-// 		c.Set("username", claims.Username)
-//
-// 		c.Next()
-// 	}
-// }
+func HttpAuth(jwtSecret string, operatorsRepository database.OperatorsRepository) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		tokenString := c.GetHeader("Authorization")
+
+		if tokenString == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			c.Abort()
+			return
+		}
+
+		claims, err := auth.ValidateToken(tokenString, jwtSecret)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
+			c.Abort()
+			return
+		}
+
+		operator, err := operatorsRepository.GetOperatorByUsername(claims.Username)
+		if err != nil || operator == nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Operator not found"})
+			c.Abort()
+			return
+		}
+
+		c.Set("operator_id", claims.OperatorID)
+		c.Set("username", claims.Username)
+
+		c.Next()
+	}
+}

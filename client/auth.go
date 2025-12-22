@@ -54,6 +54,33 @@ func (a *App) Login(serverURL string, username string, password string) (string,
 	return token, nil
 }
 
+func (a *App) Reconnect(serverURL string, token string) error {
+	if !strings.HasPrefix(serverURL, "http") {
+		serverURL = "http://" + serverURL // TODO: add tls
+	}
+
+	u, err := url.Parse(serverURL)
+	if err != nil {
+		return fmt.Errorf("invalid URL format: %w", err)
+	}
+
+	wsScheme := "wss"
+	if u.Scheme == "http" {
+		wsScheme = "ws"
+	}
+
+	u.Scheme = wsScheme
+	u.Path = "/ws"
+
+	q := u.Query()
+	q.Set("token", token)
+	u.RawQuery = q.Encode()
+
+	finalWSUrl := u.String()
+
+	return a.connectToWebSocket(finalWSUrl, token)
+}
+
 type authResponse struct {
 	Token string `json:"token"`
 }

@@ -19,37 +19,6 @@ import NewListener from "./NewListener"
 import NewAgent from "../agents/NewAgent"
 import { Request } from '../../../wailsjs/go/main/App';
 
-// Mock data for display
-const mockListeners = [
-  {
-    id: "1",
-    name: "http-listener-1",
-    type: "HTTP",
-    host: "0.0.0.0",
-    port: 8080,
-    uri: "/api",
-    status: "Running",
-  },
-  {
-    id: "2",
-    name: "smb-listener-1",
-    type: "SMB",
-    host: "192.168.1.10",
-    port: 445,
-    uri: "pipe/c2",
-    status: "Stopped",
-  },
-  {
-    id: "3",
-    name: "tcp-listener-1",
-    type: "TCP",
-    host: "10.0.0.5",
-    port: 9090,
-    uri: "-",
-    status: "Running",
-  },
-]
-
 type Props = {
   onAddView?: (componentName: string, componentTitle: string, targetTabsetId: string) => void
 }
@@ -79,7 +48,24 @@ export default function Listeners({ onAddView }: Props) {
       if (response.statusCode >= 200 && response.statusCode < 300) {
         const data = JSON.parse(response.body);
         console.log("Listeners data:", data);
-        setListeners(data);
+        
+        if (Array.isArray(data)) {
+            const parsedData = data.map((item: any) => {
+            let config = {};
+            try {
+                config = JSON.parse(item.config);
+            } catch (e) {
+                console.error("Failed to parse config for listener", item.id, e);
+            }
+            return {
+                ...item,
+                ...config
+            };
+            });
+            setListeners(parsedData);
+        } else {
+            setListeners([]);
+        }
       } else {
         throw new Error(response.error || `Failed to fetch listeners: ${response.statusCode}`);
       }
@@ -135,10 +121,10 @@ export default function Listeners({ onAddView }: Props) {
             {listeners.map((item) => (
               <TableRow key={item.id ?? JSON.stringify(item)}>
                 <TableCell>{item.name ?? "—"}</TableCell>
-                <TableCell>{(item.type ?? item.listenerType ?? "HTTP").toString()}</TableCell>
-                <TableCell>{(item.host ?? item.ip ?? "—").toString()}</TableCell>
+                <TableCell>{(item.protocol ?? item.type ?? "HTTP").toString()}</TableCell>
+                <TableCell>{(item.host ?? "—").toString()}</TableCell>
                 <TableCell>{(item.port ?? "—").toString()}</TableCell>
-                <TableCell>{(item.uri ?? item.uris ?? "—").toString()}</TableCell>
+                <TableCell>{(item.uris ? item.uris.join(", ") : "—").toString()}</TableCell>
                 <TableCell>{(item.status ?? "—").toString()}</TableCell>
               </TableRow>
             ))}
@@ -161,7 +147,7 @@ export default function Listeners({ onAddView }: Props) {
           Create new Agent
         </ContextMenuItem>
       </ContextMenuContent>
-      <NewListener open={isNewListenerOpen} onOpenChange={setIsNewListenerOpen} />
+      <NewListener open={isNewListenerOpen} onOpenChange={setIsNewListenerOpen} onCreated={load} />
       <NewAgent open={isNewAgentOpen} onOpenChange={setIsNewAgentOpen} />
     </ContextMenu>
   )

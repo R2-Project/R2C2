@@ -62,6 +62,7 @@ func StartServer(port int) error {
 
 	db := config.DB.GetInstance()
 	authRepository := database.InitOperatorsRepository(db)
+	operatorsRepository := database.InitOperatorsRepository(db)
 	authService := auth.NewAuthService(authRepository)
 
 	router.POST("/auth/login", func(c *gin.Context) {
@@ -105,12 +106,14 @@ func StartServer(port int) error {
 		client.ReadPump()
 	})
 
-	router.GET("/listeners", func(c *gin.Context) {
+	router.GET("/listeners", HttpAuth(config.GetConfig().JWTSecret, *operatorsRepository), func(c *gin.Context) {
 		listeners := listenersService.GetListeners()
 		c.JSON(http.StatusOK, listeners)
 	})
 
-	router.POST("/listeners", func(c *gin.Context) {
+	router.POST("/listeners", HttpAuth(config.GetConfig().JWTSecret, *operatorsRepository), func(c *gin.Context) {
+
+		//TODO: handle multiple listener types
 
 		var newListenerRequest listeners.NewHttpListenerRequest
 		if err := c.BindJSON(&newListenerRequest); err != nil {

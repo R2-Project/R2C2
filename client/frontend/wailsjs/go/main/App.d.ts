@@ -6,4 +6,6 @@ export function ListenC2Events(arg1:networking.SecureWebSocket):Promise<void>;
 
 export function Login(arg1:string,arg2:string,arg3:string):Promise<string>;
 
+export function Reconnect(arg1:string,arg2:string):Promise<void>;
+
 export function Request(arg1:string,arg2:string,arg3:Record<string, string>,arg4:string):Promise<networking.Response>;

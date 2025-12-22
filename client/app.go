@@ -3,6 +3,7 @@ package main
 import (
 	"client/networking"
 	"context"
+	"fmt"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
@@ -27,13 +28,17 @@ func (a *App) Request(method string, url string, headers map[string]string, body
 }
 
 func (a *App) ListenC2Events(secureConn *networking.SecureWebSocket) {
+	fmt.Println("Starting C2 Event Listener...")
 	for {
 		_, message, err := secureConn.Conn.ReadMessage()
 		if err != nil {
+			fmt.Printf("Error reading C2 event: %v\n", err)
 			runtime.EventsEmit(a.ctx, "network:error", err.Error())
 			// TODO: reconnection logic?
 			break
 		}
+		
+		fmt.Printf("Received C2 event: %s\n", string(message))
 
 		runtime.EventsEmit(a.ctx, "c2:event", string(message))
 	}
