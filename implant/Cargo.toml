@@ -6,13 +6,12 @@ edition = "2024"
 [dependencies]
 
 [features]
-default = [] 
-
+default = ["http"] 
 http = []
-tcp = []
-websocket = []
 
-full = ["http", "tcp", "websocket"]
-
-# [env]
-# SESSION_ID
+[profile.release]
+opt-level = "z"
+lto = "fat"
+strip = "symbols"
+debug = 0
+split-debuginfo = "off"

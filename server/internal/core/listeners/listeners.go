@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/mati-olivera/R2C2/internal/core/logger"
+	"github.com/mati-olivera/R2C2/internal/core/tasks"
 )
 
 type Listener struct {
@@ -21,14 +21,16 @@ type ListenersRepository interface {
 	SaveListener(listener *Listener) error
 }
 
-func NewListenersService(listenersRepository ListenersRepository) *ListenersService {
+func NewListenersService(listenersRepository ListenersRepository, taskManager *tasks.TaskManager) *ListenersService {
 	return &ListenersService{
 		listenerRepository: listenersRepository,
+		taskManager:        taskManager,
 	}
 }
 
 type ListenersService struct {
 	listenerRepository ListenersRepository
+	taskManager        *tasks.TaskManager
 }
 
 func (l *ListenersService) CreateHttpListener(request NewHttpListenerRequest) (*HttpListener, error) {
@@ -45,10 +47,11 @@ func (l *ListenersService) CreateHttpListener(request NewHttpListenerRequest) (*
 		Secure:          request.Secure,
 		Clients:         nil,
 		LiveSince:       time.Now().Format(time.RFC3339),
-		Status:          "running",
+		Status:          "created",
 		Cert:            request.Cert,
 		ResponseHeaders: request.ResponseHeaders,
 		Uris:            request.Uris,
+		TaskManager:     l.taskManager,
 	}
 
 	listenerConfig, err := json.Marshal(httpListener)
@@ -68,9 +71,10 @@ func (l *ListenersService) CreateHttpListener(request NewHttpListenerRequest) (*
 		return nil, fmt.Errorf("Failed to save listener: %w", err)
 	}
 
-	logger.Info(fmt.Sprintf("HTTP Listener '%s' created", httpListener.Name), httpListener.Host, httpListener.Port)
-
-	// TODO: go httpListener.Start()
+	err = httpListener.Start()
+	if err != nil {
+		return nil, fmt.Errorf("Failed to start HTTP listener: %w", err)
+	}
 
 	return httpListener, nil
 }
