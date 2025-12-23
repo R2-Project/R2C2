@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/mati-olivera/R2C2/internal/core/auth"
@@ -44,6 +45,10 @@ func HttpAuth(jwtSecret string, operatorsRepository database.OperatorsRepository
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 			c.Abort()
 			return
+		}
+
+		if strings.HasPrefix(tokenString, "Bearer ") {
+			tokenString = strings.TrimPrefix(tokenString, "Bearer ")
 		}
 
 		claims, err := auth.ValidateToken(tokenString, jwtSecret)

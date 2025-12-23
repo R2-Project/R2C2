@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"net/http"
 	"strconv"
 	"time"
@@ -113,20 +114,31 @@ func StartServer(port int) error {
 
 	router.POST("/listeners", HttpAuth(config.GetConfig().JWTSecret, *operatorsRepository), func(c *gin.Context) {
 
-		//TODO: handle multiple listener types
-
-		var newListenerRequest listeners.NewHttpListenerRequest
+		var newListenerRequest listeners.NewListenerRequest
 		if err := c.BindJSON(&newListenerRequest); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 			return
 		}
-		listener, err := listenersService.CreateHttpListener(newListenerRequest)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+
+		if newListenerRequest.Protocol == "http" {
+			var httpListenerdata listeners.NewHttpListenerRequest
+			err := json.Unmarshal(newListenerRequest.Data, &httpListenerdata)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid HTTP listener data"})
+				return
+			}
+			listener, err := listenersService.CreateHttpListener(httpListenerdata)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+
+			c.JSON(http.StatusCreated, listener)
 			return
 		}
 
-		c.JSON(http.StatusCreated, listener)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Unsupported protocol"})
+		return
 	})
 
 	sport := strconv.Itoa(port)
