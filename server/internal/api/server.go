@@ -13,6 +13,7 @@ import (
 	"github.com/mati-olivera/R2C2/internal/core/auth"
 	"github.com/mati-olivera/R2C2/internal/core/listeners"
 	"github.com/mati-olivera/R2C2/internal/core/logger"
+	"github.com/mati-olivera/R2C2/internal/core/tasks"
 	"github.com/mati-olivera/R2C2/internal/database"
 )
 
@@ -32,7 +33,9 @@ func StartServer(port int) error {
 	logger.Info("Websocket log adapter attached")
 
 	listenersRepo := database.InitListenersRepository(config.DB.GetInstance())
-	listenersService := listeners.NewListenersService(listenersRepo)
+	tasksRepo := database.InitTasksRepository(config.DB.GetInstance())
+	taskManager := tasks.CreateTaskManager(tasksRepo)
+	listenersService := listeners.NewListenersService(listenersRepo, taskManager)
 
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},

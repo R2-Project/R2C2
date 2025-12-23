@@ -58,13 +58,15 @@ export default function NewListener({ open, onOpenChange, onCreated }: Props) {
       }
 
       const payload = {
-        name: name.trim(),
-        type: listenerType,
-        host: host.trim(),
-        port: Number(port),
-        uris: uris.split("\n").map((u) => u.trim()).filter((u) => u !== ""),
-        secure: useSSL,
-        response_headers: headersText.split("\n").map((h) => h.trim()).filter((h) => h !== "")
+        protocol: listenerType,
+        data: {
+          name: name.trim(),
+          host: host.trim(),
+          port: Number(port),
+          uris: uris.split("\n").map((u) => u.trim()).filter((u) => u !== ""),
+          secure: useSSL,
+          response_headers: headersText.split("\n").map((h) => h.trim()).filter((h) => h !== "")
+        }
       }
 
       const response = await Request("POST", `${serverUrl}/listeners`, {}, JSON.stringify(payload));

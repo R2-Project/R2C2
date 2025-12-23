@@ -1,7 +1,6 @@
 package tasks
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/mati-olivera/R2C2/internal/core/logger"
@@ -43,12 +42,10 @@ func (tm *TaskManager) Queue(agentId string, command string, args []string) erro
 	return nil
 }
 
-func (tm *TaskManager) FetchTasks(agentId string) (*Task, error) {
-	tasks, err := tm.TaskRepository.GetTasks()
+func (tm *TaskManager) FetchTasks(agentId string) (*[]Task, error) {
+	tasks, err := tm.TaskRepository.GetPendingTasks(agentId)
 	if err != nil {
 		return nil, err
 	}
-	//TODO: check pending tasks for agent
-	fmt.Printf("tasks: %+v\n", tasks)
-	return nil, nil
+	return tasks, nil
 }
