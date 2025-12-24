@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/mati-olivera/R2C2/internal/core/agents"
 	"github.com/mati-olivera/R2C2/internal/core/tasks"
 )
 
@@ -21,16 +22,18 @@ type ListenersRepository interface {
 	SaveListener(listener *Listener) error
 }
 
-func NewListenersService(listenersRepository ListenersRepository, taskManager *tasks.TaskManager) *ListenersService {
+func NewListenersService(listenersRepository ListenersRepository, taskManager *tasks.TaskManager, sessions *agents.SessionsService) *ListenersService {
 	return &ListenersService{
 		listenerRepository: listenersRepository,
 		taskManager:        taskManager,
+		sessionsService:    sessions,
 	}
 }
 
 type ListenersService struct {
 	listenerRepository ListenersRepository
 	taskManager        *tasks.TaskManager
+	sessionsService    *agents.SessionsService
 }
 
 func (l *ListenersService) CreateHttpListener(request NewHttpListenerRequest) (*HttpListener, error) {
@@ -52,6 +55,7 @@ func (l *ListenersService) CreateHttpListener(request NewHttpListenerRequest) (*
 		ResponseHeaders: request.ResponseHeaders,
 		Uris:            request.Uris,
 		TaskManager:     l.taskManager,
+		Sessions:        l.sessionsService,
 	}
 
 	listenerConfig, err := json.Marshal(httpListener)

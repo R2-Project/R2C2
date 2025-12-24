@@ -2,14 +2,16 @@ package listeners
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
 	"sync"
 	"time"
-	"encoding/json"
 
+	"github.com/mati-olivera/R2C2/internal/core/agents"
 	"github.com/mati-olivera/R2C2/internal/core/logger"
 	"github.com/mati-olivera/R2C2/internal/core/tasks"
 )
@@ -28,7 +30,8 @@ type HttpListener struct {
 	Uris            []string  `json:"uris"` // las que va a usar el implante para ciclar peticiones
 	server          *http.Server
 	mu              sync.Mutex
-	TaskManager     *tasks.TaskManager `json:"-"`
+	TaskManager     *tasks.TaskManager      `json:"-"`
+	Sessions        *agents.SessionsService `json:"-"`
 }
 
 type Cert struct {
@@ -57,7 +60,14 @@ func (h *HttpListener) Start() error {
 	port := strconv.Itoa(h.Port)
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", h.handleRequest) // TODO: capture all endpoints
+	if len(h.Uris) == 0 {
+		// if no uris set just handle root
+		mux.HandleFunc("/", h.handleRequest)
+	} else {
+		for _, uri := range h.Uris {
+			mux.HandleFunc(fmt.Sprintf("/%s", uri), h.handleRequest)
+		}
+	}
 
 	h.server = &http.Server{
 		Addr:    h.Host + ":" + port,
@@ -100,6 +110,17 @@ func (h *HttpListener) handleRequest(w http.ResponseWriter, r *http.Request) {
 	if agentId == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("Missing X-Agent-ID header"))
+		return
+	}
+
+	// TODO::
+	// - handle authentication
+	// - this could be a task fetch request or a task result submission, hanle both
+	// - handle decrpytion (future)
+
+	err := h.Sessions.UpdateLastPing(agentId, time.Now())
+	if err != nil {
+		logger.Error("Error updating last ping for agent "+agentId, err)
 		return
 	}
 
