@@ -1,7 +1,9 @@
+use crate::tasks::Task;
+use crate::Beacon;
+use std::error::Error;
+
 pub trait Transport {
-    fn connect(&mut self, address: &str) -> Result<(), String>;
-    fn send(&self, data: &[u8]) -> std::io::Result<()>;
-    fn receive(&mut self) -> std::io::Result<Vec<u8>>;
+    async fn fetch_tasks(&self, beacon: &Beacon) -> Result<Vec<Task>, Box<dyn Error>>;
 }
 #[cfg(feature = "http")]
 pub mod http;

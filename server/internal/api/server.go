@@ -144,6 +144,22 @@ func StartServer(port int) error {
 		return
 	})
 
+	router.POST("/tasks", HttpAuth(config.GetConfig().JWTSecret, *operatorsRepository), func(c *gin.Context) {
+
+		var taskData tasks.QueueTaskRequest
+		if err := c.BindJSON(&taskData); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+			return
+		}
+		err := taskManager.Queue(taskData.AgentId, taskData.Command, taskData.Args)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusCreated, gin.H{"message": "Task queued"})
+		return
+	})
+
 	sport := strconv.Itoa(port)
 
 	return router.Run(":" + sport)

