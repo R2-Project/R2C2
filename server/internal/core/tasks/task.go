@@ -22,3 +22,9 @@ func (t *Task) GenerateId() {
 	id := uuid.New().String()
 	t.Id = id[:8]
 }
+
+type QueueTaskRequest struct {
+	AgentId string   `json:"agent_id"`
+	Command string   `json:"command"`
+	Args    []string `json:"args"`
+}

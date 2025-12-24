@@ -1,11 +1,15 @@
 use crate::commands;
+use serde::Deserialize;
 use std::collections::VecDeque;
 
-#[derive(Debug)] // Add Debug to allow printing with {:?}
-struct Task {
-    id: u32,
-    command: String,
-    description: String,
+#[derive(Debug, Deserialize)] // Add Debug to allow printing with {:?}
+pub struct Task {
+    pub id: String,
+    pub agent_id: String,
+    pub command: String,
+    pub args: Vec<String>,
+    pub status: String,
+    pub timestamp: String,
 }
 
 struct Tasks {
@@ -46,8 +50,11 @@ mod tests {
 
         let task = Task {
             id: 1,
+            agent_id: "agent1".into(),
             command: "ls".into(),
-            description: "runs \"ls\" task".into(),
+            status: "pending".into(),
+            args: vec![],
+            timestamp: "2024-01-01T00:00:00Z".into(),
         };
 
         assert!(tasks.queue(task).is_ok());

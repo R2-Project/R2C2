@@ -1,4 +1,8 @@
 use super::Transport;
+use crate::tasks::Task;
+use crate::Beacon;
+use reqwest;
+use std::error::Error;
 
 pub struct HttpConnection {}
 
@@ -9,17 +13,21 @@ impl HttpConnection {
 }
 
 impl Transport for HttpConnection {
-    fn connect(&mut self, address: &str) -> Result<(), String> {
-        println!("HTTP: Connecting to {}", address);
-        Ok(())
-    }
+    async fn fetch_tasks(&self, beacon: &Beacon) -> Result<Vec<Task>, Box<dyn Error>> {
+        let client = reqwest::Client::new();
+        let url = &beacon.listener_address;
+        let response = client
+            .get(url)
+            .header("X-Agent-Id", &beacon.id)
+            .send()
+            .await?;
 
-    fn send(&self, _data: &[u8]) -> std::io::Result<()> {
-        println!("HTTP: Sending data...");
-        Ok(())
-    }
+        if !response.status().is_success() {
+            return Err(format!("Request failed with status: {}", response.status()).into());
+        }
 
-    fn receive(&mut self) -> std::io::Result<Vec<u8>> {
-        Ok(vec![])
+        let tasks = response.json::<Vec<Task>>().await?;
+
+        Ok(tasks)
     }
 }
