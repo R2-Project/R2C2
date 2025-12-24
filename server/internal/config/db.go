@@ -77,6 +77,11 @@ func (d *Database) Init(path string) error {
 		logger.Fatal("Failed to create tasks table:", err)
 	}
 
+	err = d.createSessionsTable()
+	if err != nil {
+		logger.Fatal("Failed to create sessions table:", err)
+	}
+
 	err = db.Ping()
 	if err != nil {
 		logger.Fatal("Database connection failed:", err)
@@ -160,5 +165,35 @@ func (d *Database) createTasksTable() error {
 	}
 
 	logger.Info("Tasks table created")
+	return nil
+}
+
+func (d *Database) createSessionsTable() error {
+	createTableSQL := `CREATE TABLE IF NOT EXISTS sessions (
+		"id" TEXT NOT NULL PRIMARY KEY,
+		"listener_id" TEXT,
+		"status" TEXT,
+		"arch" TEXT,
+		"format" TEXT,
+		"computer" TEXT,
+		"user" TEXT,
+		"internal_ip" TEXT,
+		"public_ip" TEXT,
+		"timestamp" DATETIME,
+		"last_ping" DATETIME
+	);`
+
+	statement, err := d.db.Prepare(createTableSQL)
+	if err != nil {
+		return err
+	}
+	defer statement.Close()
+
+	_, err = statement.Exec()
+	if err != nil {
+		return err
+	}
+
+	logger.Info("Sessions table created")
 	return nil
 }

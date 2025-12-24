@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/mati-olivera/R2C2/internal/config"
+	"github.com/mati-olivera/R2C2/internal/core/agents"
 	"github.com/mati-olivera/R2C2/internal/core/auth"
 	"github.com/mati-olivera/R2C2/internal/core/listeners"
 	"github.com/mati-olivera/R2C2/internal/core/logger"
@@ -35,7 +36,9 @@ func StartServer(port int) error {
 	listenersRepo := database.InitListenersRepository(config.DB.GetInstance())
 	tasksRepo := database.InitTasksRepository(config.DB.GetInstance())
 	taskManager := tasks.CreateTaskManager(tasksRepo)
-	listenersService := listeners.NewListenersService(listenersRepo, taskManager)
+	sessionsRepostiory := database.InitSessionsRepository(config.DB.GetInstance())
+	sessionsService := agents.NewSessionsService(sessionsRepostiory)
+	listenersService := listeners.NewListenersService(listenersRepo, taskManager, sessionsService)
 
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},

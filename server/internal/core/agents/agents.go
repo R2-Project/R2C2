@@ -7,9 +7,14 @@ type Agent struct {
 	Arch       string `json:"arch"`
 	Format     string `json:"format"`
 	// Sleep and jitter?
-	Timestamp int64 `json:"timestamp"`
+	Timestamp int64  `json:"timestamp"`
+	LastPing  string `json:"last_ping"`
 	// WorkingTime string `json:"working_time"`
 	// KillDate int64  `json:"kill_date"`
+	Computer   string `json:"computer"`
+	User       string `json:"user"`
+	InternalIp string `json:"internal_ip"`
+	PublicIp   string `json:"public_ip"`
 }
 
 // Generates the implant to be deployed on the target system given the agent config
