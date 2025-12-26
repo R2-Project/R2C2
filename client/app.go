@@ -37,8 +37,9 @@ func (a *App) ListenC2Events(secureConn *networking.SecureWebSocket) {
 			// TODO: reconnection logic?
 			break
 		}
-		
+
 		fmt.Printf("Received C2 event: %s\n", string(message))
+		// TODO: handle log events and task results
 
 		runtime.EventsEmit(a.ctx, "c2:event", string(message))
 	}

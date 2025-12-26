@@ -8,7 +8,11 @@ interface ConsoleEntry {
   level?: "info" | "success" | "warning" | "error";
 }
 
-export default function CommandInterface() {
+interface CommandInterfaceProps {
+  sessionId?: string;
+}
+
+export default function CommandInterface({ sessionId }: CommandInterfaceProps) {
   const [entries, setEntries] = useState<ConsoleEntry[]>([
     {
       id: "1",
@@ -16,6 +20,13 @@ export default function CommandInterface() {
       content: "[*] C2 Framework v2.1.3 - Command & Control Interface",
       timestamp: new Date(),
       level: "success",
+    },
+    {
+      id: "2",
+      type: "system",
+      content: `[+] Connected to session: ${sessionId || "UNKNOWN"}`,
+      timestamp: new Date(),
+      level: "info",
     },
     {
       id: "2",
@@ -64,7 +75,7 @@ export default function CommandInterface() {
   const [currentCommand, setCurrentCommand] = useState("");
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
-  const [currentPrompt, setCurrentPrompt] = useState("beacon>");
+  const [currentPrompt, setCurrentPrompt] = useState(`${sessionId ? sessionId : "beacon"}>`);
   const consoleEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -208,17 +219,21 @@ export default function CommandInterface() {
         <div ref={consoleEndRef} />
       </div>
       
-      <div className="flex items-center space-x-2 mt-auto">
-        <span className="c2-text-accent">{currentPrompt}</span>
-        <input
-          ref={inputRef}
-          type="text"
-          value={currentCommand}
-          onChange={(e) => setCurrentCommand(e.target.value)}
-          onKeyDown={handleKeyDown}
-          className="flex-1 bg-transparent border-none outline-none c2-text"
-          placeholder="Enter command..."
-        />
+      <div className="mt-auto pt-2">
+        <div className="flex items-center space-x-2 border c2-border rounded bg-white/5 px-3 py-2 focus-within:ring-1 focus-within:ring-[var(--c2-accent)] focus-within:border-transparent transition-all">
+          <span className="c2-text-accent font-bold shrink-0 select-none">{currentPrompt}</span>
+          <input
+            ref={inputRef}
+            type="text"
+            value={currentCommand}
+            onChange={(e) => setCurrentCommand(e.target.value)}
+            onKeyDown={handleKeyDown}
+            className="flex-1 bg-transparent border-none outline-none c2-text placeholder:text-white/20"
+            placeholder="Enter command..."
+            autoComplete="off"
+            spellCheck="false"
+          />
+        </div>
       </div>
     </div>
   );

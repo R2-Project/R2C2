@@ -35,7 +35,7 @@ func StartServer(port int) error {
 
 	listenersRepo := database.InitListenersRepository(config.DB.GetInstance())
 	tasksRepo := database.InitTasksRepository(config.DB.GetInstance())
-	taskManager := tasks.CreateTaskManager(tasksRepo)
+	taskManager := tasks.CreateTaskManager(tasksRepo, hub)
 	sessionsRepostiory := database.InitSessionsRepository(config.DB.GetInstance())
 	sessionsService := agents.NewSessionsService(sessionsRepostiory)
 	listenersService := listeners.NewListenersService(listenersRepo, taskManager, sessionsService)

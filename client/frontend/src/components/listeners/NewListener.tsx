@@ -69,7 +69,9 @@ export default function NewListener({ open, onOpenChange, onCreated }: Props) {
         }
       }
 
-      const response = await Request("POST", `${serverUrl}/listeners`, {}, JSON.stringify(payload));
+      const token = localStorage.getItem("token");
+      const headers = token ? { "Authorization": `Bearer ${token}` } : {};
+      const response = await Request("POST", `${serverUrl}/listeners`, headers, JSON.stringify(payload));
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         setSuccess("Listener created")

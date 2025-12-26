@@ -29,7 +29,11 @@ const tableData = [
   },
 ]
 
-export default function Component() {
+interface SessionsProps {
+  onOpenSession?: (sessionId: string) => void;
+}
+
+export default function Component({ onOpenSession }: SessionsProps) {
   return (
     <div className="w-full">
       <div className="">
@@ -50,8 +54,12 @@ export default function Component() {
           </TableHeader>
           <TableBody>
             {tableData.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell>{item.session_id}</TableCell>
+              <TableRow 
+                key={item.id} 
+                className="cursor-pointer hover:bg-muted/50"
+                onClick={() => onOpenSession?.(item.session_id)}
+              >
+                <TableCell className="font-mono text-green-500">{item.session_id}</TableCell>
                 <TableCell>{item.external}</TableCell>
                 <TableCell>{item.internal}</TableCell>
                 <TableCell>{item.listener}</TableCell>

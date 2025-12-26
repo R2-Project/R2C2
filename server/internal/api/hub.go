@@ -51,6 +51,10 @@ func (h *Hub) Run() {
 	}
 }
 
+func (h *Hub) BroadcastMessage(message []byte) {
+	h.Broadcast <- message
+}
+
 type LogAdapter struct {
 	Hub *Hub
 }
