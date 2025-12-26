@@ -6,7 +6,7 @@ const http = axios.create({
     baseURL: 'http://localhost:8000',
 });
 
-http.defaults.headers.common['Authorization'] = `Bearer ${localStorage.getItem('jwtToken') || ''}`;
+http.defaults.headers.common['Authorization'] = `Bearer ${localStorage.getItem('token') || ''}`;
 
 http.interceptors.request.use(
     authorizationInterceptor

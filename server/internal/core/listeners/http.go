@@ -4,13 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/mati-olivera/R2C2/internal/core/agents"
 	"github.com/mati-olivera/R2C2/internal/core/logger"
 	"github.com/mati-olivera/R2C2/internal/core/tasks"
@@ -57,29 +58,47 @@ func (h *HttpListener) Start() error {
 		return errors.New("listener is already running")
 	}
 
-	port := strconv.Itoa(h.Port)
+	gin.SetMode(gin.ReleaseMode)
 
-	mux := http.NewServeMux()
+	router := gin.New()
+
+	router.Use(func(c *gin.Context) {
+		// custom banners
+		c.Writer.Header().Set("Server", "nginx")
+		c.Next()
+	})
+
+	// fake 404
+	router.NoRoute(func(c *gin.Context) {
+		c.String(404, "Not Found")
+	})
+
 	if len(h.Uris) == 0 {
-		// if no uris set just handle root
-		mux.HandleFunc("/", h.handleRequest)
+		// if no URIs specified, use root
+		router.Any("/", h.handleRequest)
 	} else {
 		for _, uri := range h.Uris {
-			mux.HandleFunc(fmt.Sprintf("/%s", uri), h.handleRequest)
+			path := "/" + strings.TrimLeft(uri, "/")
+			router.Any(path, h.handleRequest)
 		}
 	}
 
+	port := strconv.Itoa(h.Port)
+
 	h.server = &http.Server{
-		Addr:    h.Host + ":" + port,
-		Handler: mux,
+		Addr:         h.Host + ":" + port,
+		Handler:      router,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
 	}
 
 	h.Status = "running"
 
 	go func() {
 		logger.Info("Starting HTTP listener", "listener_id", h.Id, "host", h.Host, "port", port)
+
 		if err := h.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			logger.Error("HTTP Listener Error: %v\n", err)
+			logger.Error("HTTP Listener Error", err, "listener_id", h.Id)
 		}
 
 		h.mu.Lock()
@@ -105,17 +124,22 @@ func (h *HttpListener) Stop() {
 	logger.Info("Stopped HTTP listener", "listener_id", h.Id)
 }
 
-func (h *HttpListener) handleRequest(w http.ResponseWriter, r *http.Request) {
-	agentId := r.Header.Get("X-Agent-ID")
+func (h *HttpListener) IsRunning() bool {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	return h.Status == "running"
+}
+
+func (h *HttpListener) handleRequest(ctx *gin.Context) {
+	agentId := ctx.GetHeader("X-Agent-ID")
 	if agentId == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Missing X-Agent-ID header"))
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Missing X-Agent-ID header"})
 		return
 	}
 
 	// TODO::
 	// - handle authentication
-	// - this could be a task fetch request or a task result submission, hanle both
+	// - [DONE] this could be a task fetch request or a task result submission, hanle both
 	// - handle decrpytion (future)
 
 	err := h.Sessions.UpdateLastPing(agentId, time.Now())
@@ -124,24 +148,38 @@ func (h *HttpListener) handleRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tasks, err := h.TaskManager.FetchTasks(agentId)
-	if err != nil {
-		logger.Error("Error fetching tasks", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+	// TODO: make both cases his own reusable functions
+
+	// submitting task results
+	if ctx.Request.Method == http.MethodPost {
+		var result tasks.TaskResult
+		if err := json.NewDecoder(ctx.Request.Body).Decode(&result); err != nil {
+			logger.Error("Error decoding task result", err)
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid task result format"})
+			return
+		}
+
+		err := h.TaskManager.SubmitTaskResult(result)
+		if err != nil {
+			logger.Error("error updating task status", err, "task_id", result.TaskId)
+		}
 	}
 
-	if tasks == nil || len(*tasks) == 0 {
-		w.WriteHeader(http.StatusNoContent)
+	// fetching tasks
+	if ctx.Request.Method == http.MethodGet {
+		tasks, err := h.TaskManager.FetchTasks(agentId)
+		if err != nil {
+			logger.Error("Error fetching tasks", err)
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Error fetching tasks"})
+			return
+		}
+
+		if tasks == nil || len(*tasks) == 0 {
+			ctx.JSON(http.StatusNoContent, gin.H{})
+			return
+		}
+
+		ctx.JSON(http.StatusOK, gin.H{"tasks": tasks})
 		return
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(tasks)
-}
-
-func (h *HttpListener) IsRunning() bool {
-	h.mu.Lock()
-	defer h.mu.Unlock()
-	return h.Status == "running"
 }

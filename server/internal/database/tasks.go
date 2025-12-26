@@ -18,7 +18,6 @@ func InitTasksRepository(db *sql.DB) *TasksRepository {
 }
 
 func (r *TasksRepository) SaveTask(task *tasks.Task) error {
-
 	args, err := json.Marshal(task.Args)
 	if err != nil {
 		return err
@@ -80,4 +79,10 @@ func (r *TasksRepository) GetPendingTasks(agentId string) (*[]tasks.Task, error)
 		result = append(result, task)
 	}
 	return &result, nil
+}
+
+func (r *TasksRepository) UpdateTask(task *tasks.Task) error {
+	query := `UPDATE tasks SET status = ? WHERE id = ?`
+	_, err := r.db.Exec(query, task.Status, task.Id)
+	return err
 }

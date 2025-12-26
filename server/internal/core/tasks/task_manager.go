@@ -1,18 +1,26 @@
 package tasks
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/mati-olivera/R2C2/internal/core/logger"
 )
 
-type TaskManager struct {
-	TaskRepository TaskRepository
+type EventHub interface {
+	Run()
+	BroadcastMessage(message []byte)
 }
 
-func CreateTaskManager(taskRepository TaskRepository) *TaskManager {
+type TaskManager struct {
+	TaskRepository TaskRepository
+	eventHub       EventHub
+}
+
+func CreateTaskManager(taskRepository TaskRepository, eventHub EventHub) *TaskManager {
 	return &TaskManager{
 		TaskRepository: taskRepository,
+		eventHub:       eventHub,
 	}
 }
 
@@ -48,4 +56,29 @@ func (tm *TaskManager) FetchTasks(agentId string) (*[]Task, error) {
 		return nil, err
 	}
 	return tasks, nil
+}
+
+func (tm *TaskManager) SubmitTaskResult(task TaskResult) error {
+
+	taskData := Task{
+		Id:     task.TaskId,
+		Status: TaskStatusCompleted,
+	}
+	err := tm.TaskRepository.UpdateTask(&taskData)
+	if err != nil {
+		return err
+	}
+
+	// TODO: broadcast task result
+	// add operator issuer?
+
+	taskResult, err := json.Marshal(task)
+	if err != nil {
+		return err
+	}
+
+	// send task result
+	tm.eventHub.BroadcastMessage([]byte(taskResult))
+
+	return nil
 }

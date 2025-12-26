@@ -6,9 +6,10 @@ import NetworkMap from '@/components/NetworkMap';
 import Listeners from '@/components/listeners/Listeners';
 import AIChatbot from '@/components/AIChatbot';
 import Logs from '@/components/Logs';
+import Session from '@/components/Session';
 import 'flexlayout-react/style/dark.css';
 import ShortcutsBar from '@/components/menu/ShortcutsBar';
-import { Headphones, Network, Users, Bot, X, Maximize2, Minimize2, ChevronDown, HatGlasses, FileText, Plus } from "lucide-react"
+import { Headphones, Network, Users, Bot, X, Maximize2, Minimize2, ChevronDown, HatGlasses, FileText, Plus, Terminal } from "lucide-react"
 
 const jsonModel: IJsonModel = {
   global: {
@@ -97,7 +98,7 @@ export default function C2Dashboard() {
     const component = node.getComponent();
     switch (component) {
       case 'sessions':
-        return <Sessions />;
+        return <Sessions onOpenSession={(id: string) => onAddView('session', `Session ${id}`, 'bottomTabset', { sessionId: id })} />;
       case 'listeners':
         return <Listeners onAddView={onAddView} />;
       case 'networkMap':
@@ -106,6 +107,10 @@ export default function C2Dashboard() {
         return <AIChatbot />;
       case 'logs':
         return <Logs />;
+      case 'session':
+        // Extract session ID from node config if available
+        const config = node.getConfig();
+        return <Session sessionId={config?.sessionId} />;
       default:
         return null;
     }
@@ -127,6 +132,9 @@ export default function C2Dashboard() {
         break;
       case 'chatbot':
         Icon = Bot;
+      case 'session':
+        Icon = Terminal;
+        break;
         break;
       case 'logs':
         Icon = FileText;
@@ -166,14 +174,26 @@ export default function C2Dashboard() {
   };
 
   // This function handles adding a new tab dynamically
-  const onAddView = (componentName: string, componentTitle: string, targetTabsetId: string) => {
+  const onAddView = (componentName: string, componentTitle: string, targetTabsetId: string, config?: any) => {
     let existingNodeId: string | null = null;
 
-    model.current.visitNodes((node) => {
-      if (node.getType() === 'tab' && (node as TabNode).getComponent() === componentName) {
-        existingNodeId = node.getId();
-      }
-    });
+    // For sessions, we want to allow multiple tabs if they have different session IDs
+    if (componentName !== 'session') {
+      model.current.visitNodes((node) => {
+        if (node.getType() === 'tab' && (node as TabNode).getComponent() === componentName) {
+          existingNodeId = node.getId();
+        }
+      });
+    } else if (config?.sessionId) {
+       model.current.visitNodes((node) => {
+        if (node.getType() === 'tab' && (node as TabNode).getComponent() === componentName) {
+           const nodeConfig = (node as TabNode).getConfig();
+           if (nodeConfig?.sessionId === config.sessionId) {
+             existingNodeId = node.getId();
+           }
+        }
+      });
+    }
 
     if (existingNodeId) {
       model.current.doAction(Actions.selectTab(existingNodeId));
@@ -189,6 +209,7 @@ export default function C2Dashboard() {
             type: 'tab',
             name: componentTitle,
             component: componentName,
+            config: config,
           },
           targetTabsetId, // The ID of the tabset to add the new tab to
           location, // Where to add it in the tabset
@@ -205,8 +226,7 @@ export default function C2Dashboard() {
             {
               type: 'tab',
               name: componentTitle,
-              component: componentName,
-            },
+              component: componentName,            config: config,            },
             "bottomTabset", 
             location,
             -1,

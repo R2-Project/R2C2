@@ -28,3 +28,10 @@ type QueueTaskRequest struct {
 	Command string   `json:"command"`
 	Args    []string `json:"args"`
 }
+
+type TaskResult struct {
+	TaskId  string `json:"task_id"`
+	AgentId string `json:"agent_id"`
+	Command string `json:"command"`
+	Output  string `json:"output"`
+}
