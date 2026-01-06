@@ -11,6 +11,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/mati-olivera/R2C2/internal/config"
 	"github.com/mati-olivera/R2C2/internal/core/agents"
+	_ "github.com/mati-olivera/R2C2/internal/core/ai/providers"
 	"github.com/mati-olivera/R2C2/internal/core/auth"
 	"github.com/mati-olivera/R2C2/internal/core/listeners"
 	"github.com/mati-olivera/R2C2/internal/core/logger"
