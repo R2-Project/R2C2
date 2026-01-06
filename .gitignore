@@ -3,3 +3,4 @@ build
 implant/target
 r2c2.log
 db
+config.yaml

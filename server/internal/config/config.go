@@ -13,11 +13,19 @@ import (
 var cfg *Config
 var once sync.Once
 
+type AIProviderConfig struct {
+	Provider   string `yaml:"provider"`
+	APIKey     string `yaml:"api_key"`
+	APIVersion string `yaml:"api_version"`
+	BaseURL    string `yaml:"base_url"`
+}
+
 type Config struct {
 	Api          ApiConfig                `yaml:"api"`
 	Operators    []operators.OperatorLoad `yaml:"operators"`
 	DatabasePath string                   `yaml:"database_path"`
 	JWTSecret    string                   `yaml:"jwt_secret"`
+	AIProvider   AIProviderConfig         `yaml:"ai"`
 }
 
 func LoadConfig(path string) (*Config, error) {
