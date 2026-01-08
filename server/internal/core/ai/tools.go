@@ -11,7 +11,7 @@ type ToolDefinition struct {
 type ToolHandler func(args map[string]interface{}) (string, error)
 
 type ToolRegistry struct {
-	Definitions []ToolDefinition
+	definitions []ToolDefinition
 	Handlers    map[string]ToolHandler
 }
 
@@ -22,10 +22,28 @@ func NewRegistry() *ToolRegistry {
 }
 
 func (r *ToolRegistry) Register(name, desc, schema string, handler ToolHandler) {
-	r.Definitions = append(r.Definitions, ToolDefinition{
+	r.definitions = append(r.definitions, ToolDefinition{
 		Name:        name,
 		Description: desc,
 		Parameters:  json.RawMessage(schema),
 	})
 	r.Handlers[name] = handler
+}
+
+func (r *ToolRegistry) GetDefinitions() []ToolDefinition {
+	return r.definitions
+}
+
+func (r *ToolRegistry) Execute(name, argsStr string) (string, error) {
+	handler, exists := r.Handlers[name]
+	if !exists {
+		return "", nil
+	}
+
+	var args map[string]interface{}
+	if err := json.Unmarshal([]byte(argsStr), &args); err != nil {
+		return "", err
+	}
+
+	return handler(args)
 }
