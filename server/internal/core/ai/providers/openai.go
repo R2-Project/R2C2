@@ -15,17 +15,10 @@ import (
 )
 
 func init() {
-	ai.RegisterProvider("openai", func(cfg ai.ProviderConfig) (ai.Provider, error) {
-		return CreateOpenAIAdapter(), nil
+	ai.RegisterProvider("openai", func(cfg config.AIProviderConfig) (ai.Provider, error) {
+		return CreateOpenAIAdapter(cfg), nil
 	})
 }
-
-var systemPrompt = `
-You are a Red Team Operator AI whose goal is to help a human operator perform security assessments and penetration tests on computer systems. You will assist the operator by providing suggestions, generating code snippets, and answering questions related to cybersecurity.
-Your goal is to operate a C2 framework to manage agents, listeners, and tasks.
-You will be capable of handle the following tools:
-- get_listeners: List all active listeners, optionally filtered by type.
-`
 
 type AIAdapter struct {
 	mu           sync.Mutex
@@ -33,9 +26,10 @@ type AIAdapter struct {
 	config       *config.AIProviderConfig
 }
 
-func CreateOpenAIAdapter() *AIAdapter {
+func CreateOpenAIAdapter(cfg config.AIProviderConfig) *AIAdapter {
 	return &AIAdapter{
-		systemPrompt: systemPrompt,
+		config:       &cfg,
+		systemPrompt: ai.SystemPrompt,
 	}
 }
 
@@ -64,10 +58,6 @@ func (adapter *AIAdapter) Name() string {
 }
 
 func (adapter *AIAdapter) Query(ctx context.Context, messages []ai.Message, tools []ai.ToolDefinition) (*ai.Message, error) {
-
-	if adapter.config == nil {
-		adapter.config = &config.GetConfig().AIProvider
-	}
 
 	adapter.mu.Lock()
 	defer adapter.mu.Unlock()

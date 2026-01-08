@@ -11,6 +11,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/mati-olivera/R2C2/internal/config"
 	"github.com/mati-olivera/R2C2/internal/core/agents"
+	"github.com/mati-olivera/R2C2/internal/core/ai"
 	_ "github.com/mati-olivera/R2C2/internal/core/ai/providers"
 	"github.com/mati-olivera/R2C2/internal/core/auth"
 	"github.com/mati-olivera/R2C2/internal/core/listeners"
@@ -40,6 +41,13 @@ func StartServer(port int) error {
 	sessionsRepostiory := database.InitSessionsRepository(config.DB.GetInstance())
 	sessionsService := agents.NewSessionsService(sessionsRepostiory)
 	listenersService := listeners.NewListenersService(listenersRepo, taskManager, sessionsService)
+
+	provider, err := ai.NewProvider(config.GetConfig().AIProvider)
+	if err != nil {
+		logger.Error("Failed to initialize AI provider", err)
+		return err
+	}
+	aiService := ai.NewAIService(provider)
 
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
@@ -162,6 +170,25 @@ func StartServer(port int) error {
 		}
 		c.JSON(http.StatusCreated, gin.H{"message": "Task queued"})
 		return
+	})
+
+	router.POST("/ai/query", HttpAuth(config.GetConfig().JWTSecret, *operatorsRepository), func(c *gin.Context) {
+
+		var aiRequest ai.QueryRequest
+		if err := c.BindJSON(&aiRequest); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+			return
+		}
+
+		operatorId := "anakin" // FIXME:
+
+		responseMessage, err := aiService.Chat(operatorId, aiRequest.Message)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": responseMessage})
 	})
 
 	sport := strconv.Itoa(port)

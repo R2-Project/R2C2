@@ -1,54 +1,66 @@
 package ai
 
-func (s *AIService) Chat(userMessage string) (string, error) {
+import (
+	"context"
+	"fmt"
+)
 
-	// TODO: handle history by operator and tool calls
+func (s *AIService) Chat(operatorId string, userMessage string) (string, error) {
 
-	// messages := []Message{
-	// 	{Role: "user", Content: userMessage},
-	// }
-	//
-	// Limit loop to prevent infinite recursion
-	// for i := 0; i < 5; i++ {
-	// 	// 2. Call LLM Provider (OpenAI/Anthropic)
-	// 	// Pass 'messages' AND 's.Registry.Definitions'
-	// 	response, err := s.provider.Query(context.Background(), s.Registry.Definitions)
-	// 	if err != nil {
-	// 		return "", err
-	// 	}
-	//
-	// 	// 3. Check: Did the AI want to call a tool?
-	// 	if response.ToolCall == nil {
-	// 		// No tool call, just text. We are done.
-	// 		return response.Content, nil
-	// 	}
-	//
-	// 	// 4. Execute the Tool
-	// 	toolName := response.ToolCall.Name
-	// 	toolArgs := response.ToolCall.Arguments // Map
-	//
-	// 	handler, exists := s.Registry.Handlers[toolName]
-	// 	if !exists {
-	// 		messages = append(messages, Message{Role: "tool", Content: "Error: Tool not found"})
-	// 		continue
-	// 	}
-	//
-	// 	// Run the C2 function!
-	// 	result, _ := handler(toolArgs)
-	//
-	// 	// 5. Add Result to History
-	// 	// The AI needs to see the result to know what to do next
-	// 	messages = append(messages, Message{
-	// 		Role:     "assistant",
-	// 		ToolCall: response.ToolCall, // Log that it tried to call
-	// 	})
-	// 	messages = append(messages, Message{
-	// 		Role:    "tool",
-	// 		Content: result, // The output of the function
-	// 	})
-	//
-	// 	// Loop runs again... LLM sees the result and generates the next step.
-	// }
+	ctx := context.Background() // FIXME: pass real context
 
-	return "Agent loop limit reached", nil
+	s.historyMutex.Lock()
+	if _, exists := s.history[operatorId]; !exists {
+		s.history[operatorId] = []Message{
+			{Role: "system", Content: SystemPrompt},
+		}
+	}
+	messages := s.history[operatorId]
+	s.historyMutex.Unlock()
+
+	messages = append(messages, Message{
+		Role:    "user",
+		Content: userMessage,
+	})
+
+	finalResponse := ""
+
+	// limit infinite recursion
+	for i := 0; i < 5; i++ {
+		tools := s.Registry.GetDefinitions()
+
+		resp, err := s.provider.Query(ctx, messages, tools)
+		if err != nil {
+			return "", fmt.Errorf("AI provider error: %w", err)
+		}
+
+		messages = append(messages, *resp)
+
+		if len(resp.ToolCalls) == 0 {
+			// if no tools called we assume final answer
+			finalResponse = resp.Content
+			break
+		}
+
+		for _, toolCall := range resp.ToolCalls {
+			fmt.Printf("[AI] Calling Tool: %s args: %s\n", toolCall.Name, toolCall.Args)
+
+			resultStr, err := s.Registry.Execute(toolCall.Name, toolCall.Args)
+			if err != nil {
+				resultStr = fmt.Sprintf("Error executing tool: %v", err)
+			}
+
+			messages = append(messages, Message{
+				Role:       "tool",
+				Content:    resultStr,
+				ToolCallID: toolCall.ID, // Matches the ID from the assistant's request
+			})
+		}
+	}
+
+	s.historyMutex.Lock()
+	s.history[operatorId] = messages
+	s.historyMutex.Unlock()
+
+	return finalResponse, nil
 }
