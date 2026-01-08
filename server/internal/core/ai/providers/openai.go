@@ -33,17 +33,25 @@ func CreateOpenAIAdapter(cfg config.AIProviderConfig) *AIAdapter {
 	}
 }
 
+type toolWrapper struct {
+	Type     string            `json:"type"`
+	Function ai.ToolDefinition `json:"function"`
+}
+
 type openAiQueryRequest struct {
-	Messages         []ai.Message `json:"messages"`
-	MaxTokens        int          `json:"max_tokens"`
-	Temperature      float64      `json:"temperature"`
-	TopP             float64      `json:"top_p"`
-	FrequencyPenalty float64      `json:"frequency_penalty"`
-	PresencePenalty  float64      `json:"presence_penalty"`
+	Messages         []adapterMessage `json:"messages"`
+	Tools            []toolWrapper    `json:"tools,omitempty"`
+	ToolChoice       interface{}      `json:"tool_choice,omitempty"`
+	MaxTokens        int              `json:"max_tokens"`
+	Temperature      float64          `json:"temperature"`
+	TopP             float64          `json:"top_p"`
+	FrequencyPenalty float64          `json:"frequency_penalty"`
+	PresencePenalty  float64          `json:"presence_penalty"`
 }
 
 type openAiChoice struct {
-	Message ai.Message `json:"message"`
+	Message      adapterMessage `json:"message"`
+	FinishReason string         `json:"finish_reason"`
 }
 
 type openAiQueryResponse struct {
@@ -51,6 +59,30 @@ type openAiQueryResponse struct {
 	Error   *struct {
 		Message string `json:"message"`
 	} `json:"error,omitempty"`
+}
+
+type messageToolCall struct {
+	ID       string          `json:"id"`
+	Type     string          `json:"type"`
+	Function adapterFunction `json:"function"`
+}
+
+type adapterFunction struct {
+	Name      string `json:"name"`
+	Arguments string `json:"arguments"`
+}
+
+type adapterMessage struct {
+	Role       string                   `json:"role"`
+	Content    string                   `json:"content,omitempty"`
+	ToolCalls  []adapterMessageToolCall `json:"tool_calls,omitempty"`
+	ToolCallID string                   `json:"tool_call_id,omitempty"`
+}
+
+type adapterMessageToolCall struct {
+	ID       string          `json:"id"`
+	Type     string          `json:"type"`
+	Function adapterFunction `json:"function"`
 }
 
 func (adapter *AIAdapter) Name() string {
@@ -62,13 +94,54 @@ func (adapter *AIAdapter) Query(ctx context.Context, messages []ai.Message, tool
 	adapter.mu.Lock()
 	defer adapter.mu.Unlock()
 
+	var adapterHistory []adapterMessage
+	for _, m := range messages {
+		azMsg := adapterMessage{
+			Role:       m.Role,
+			Content:    m.Content,
+			ToolCallID: m.ToolCallID,
+		}
+
+		if len(m.ToolCalls) > 0 {
+			var azToolCalls []adapterMessageToolCall
+			for _, tc := range m.ToolCalls {
+				azToolCalls = append(azToolCalls, adapterMessageToolCall{
+					ID:   tc.ID,
+					Type: "function",
+					Function: adapterFunction{
+						Name:      tc.Name,
+						Arguments: tc.Args,
+					},
+				})
+			}
+			azMsg.ToolCalls = azToolCalls
+		}
+
+		adapterHistory = append(adapterHistory, azMsg)
+	}
+
+	var parsedTools []toolWrapper
+	if len(tools) > 0 {
+		for _, t := range tools {
+			parsedTools = append(parsedTools, toolWrapper{
+				Type:     "function",
+				Function: t,
+			})
+		}
+	}
+
 	data := openAiQueryRequest{
-		Messages:         messages,
+		Messages:         adapterHistory,
+		Tools:            parsedTools,
 		MaxTokens:        2000,
 		Temperature:      0.1,
 		TopP:             0.95,
 		FrequencyPenalty: 0.0,
 		PresencePenalty:  0.0,
+	}
+
+	if len(parsedTools) > 0 {
+		data.ToolChoice = "auto"
 	}
 
 	jsonData, err := json.Marshal(data)
@@ -98,17 +171,19 @@ func (adapter *AIAdapter) Query(ctx context.Context, messages []ai.Message, tool
 
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
-	}
-
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("error reading response body: %w", err)
 	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code %d: ", resp.StatusCode, string(body))
+	}
+
 	var queryResp openAiQueryResponse
-	if err := json.Unmarshal(body, &queryResp); err != nil {
-		return nil, fmt.Errorf("error unmarshaling response: %w", err)
+	err = json.Unmarshal(body, &queryResp)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarshaling response JSON: %w", err)
 	}
 
 	if queryResp.Error != nil {
@@ -119,5 +194,24 @@ func (adapter *AIAdapter) Query(ctx context.Context, messages []ai.Message, tool
 		return nil, fmt.Errorf("no choices returned from API")
 	}
 
-	return &queryResp.Choices[0].Message, nil
+	azMsg := queryResp.Choices[0].Message
+
+	genericMsg := &ai.Message{
+		Role:    azMsg.Role,
+		Content: azMsg.Content,
+	}
+
+	if len(azMsg.ToolCalls) > 0 {
+		var genericToolCalls []ai.ToolCall
+		for _, azTc := range azMsg.ToolCalls {
+			genericToolCalls = append(genericToolCalls, ai.ToolCall{
+				ID:   azTc.ID,
+				Name: azTc.Function.Name,
+				Args: azTc.Function.Arguments,
+			})
+		}
+		genericMsg.ToolCalls = genericToolCalls
+	}
+
+	return genericMsg, nil
 }

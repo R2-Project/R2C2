@@ -13,11 +13,13 @@ type AIService struct {
 }
 
 func NewAIService(provider Provider) *AIService {
-	return &AIService{
+	service := &AIService{
 		provider: provider,
 		history:  make(map[string][]Message),
 		Registry: NewRegistry(),
 	}
+	service.SetupTools()
+	return service
 }
 
 func (s *AIService) SetupTools() {
@@ -26,13 +28,8 @@ func (s *AIService) SetupTools() {
 		"get_listeners",
 		"List all active listeners, optionally filtered by type",
 		`{
-		"type": "object",
-		"properties": {
-		"id": {"type": "string"},
-		"name": {"type": "string"},
-		"config": {"type": "string"},
-		"protocol": {"type": "string"},
-		}
+			"type": "object",
+			"properties": {}
 		}`,
 		func(args map[string]interface{}) (string, error) {
 
