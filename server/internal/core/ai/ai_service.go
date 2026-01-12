@@ -1,22 +1,26 @@
 package ai
 
 import (
-	"fmt"
+	"encoding/json"
 	"sync"
+
+	"github.com/mati-olivera/R2C2/internal/core/listeners"
 )
 
 type AIService struct {
-	provider     Provider
-	Registry     *ToolRegistry
-	history      map[string][]Message
-	historyMutex sync.RWMutex
+	provider         Provider
+	Registry         *ToolRegistry
+	history          map[string][]Message
+	historyMutex     sync.RWMutex
+	listenersService listeners.ListenersService
 }
 
-func NewAIService(provider Provider) *AIService {
+func NewAIService(provider Provider, listenersService listeners.ListenersService) *AIService {
 	service := &AIService{
-		provider: provider,
-		history:  make(map[string][]Message),
-		Registry: NewRegistry(),
+		provider:         provider,
+		history:          make(map[string][]Message),
+		Registry:         NewRegistry(),
+		listenersService: listenersService,
 	}
 	service.SetupTools()
 	return service
@@ -33,10 +37,12 @@ func (s *AIService) SetupTools() {
 		}`,
 		func(args map[string]interface{}) (string, error) {
 
-			// TODO:
+			listeners := s.listenersService.GetListeners()
+			result, err := json.Marshal(listeners)
+			if err != nil {
+				return "", err
+			}
 
-			listeners := []string{"listener1", "listener2"}
-
-			return "Active listeners: " + fmt.Sprint(listeners), nil
+			return string(result), nil
 		})
 }
