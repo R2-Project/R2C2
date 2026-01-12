@@ -15,7 +15,7 @@ type ToolRegistry struct {
 	Handlers    map[string]ToolHandler
 }
 
-func NewRegistry() *ToolRegistry {
+func NewToolRegistry() *ToolRegistry {
 	return &ToolRegistry{
 		Handlers: make(map[string]ToolHandler),
 	}
