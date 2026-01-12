@@ -24,6 +24,8 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool { return true },
 }
 
+// TODO: split the endpoints into files
+
 func StartServer(port int) error {
 
 	router := gin.New()
@@ -47,7 +49,7 @@ func StartServer(port int) error {
 		logger.Error("Failed to initialize AI provider", err)
 		return err
 	}
-	aiService := ai.NewAIService(provider)
+	aiService := ai.NewAIService(provider, *listenersService)
 
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
