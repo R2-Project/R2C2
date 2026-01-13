@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/mati-olivera/R2C2/internal/core/broadcaster"
 	"github.com/mati-olivera/R2C2/internal/core/listeners"
 )
 
@@ -64,11 +65,8 @@ func (s *AIService) SetupTools() {
 		}`,
 		func(args map[string]interface{}) (string, error) {
 
-			// TODO: broacast ui navigation event
-			// eventHub.Broadcast("ui_navigation", gin.H{
-			// 	"view": args.View,
-			//	"user_id": operatorId, ??
-			// })
+			// FIXME: send an structured event instead of raw JSON
+			broadcaster.BroadcastEvent(broadcaster.UI_NAVIGATE_EVENT, []byte(fmt.Sprintf(`{"view":"%s"}`, args["view"])))
 
 			return fmt.Sprintf("Success: Navigation signal sent for view '%s'", args["view"]), nil
 		})

@@ -14,6 +14,7 @@ import (
 	"github.com/mati-olivera/R2C2/internal/core/ai"
 	_ "github.com/mati-olivera/R2C2/internal/core/ai/providers"
 	"github.com/mati-olivera/R2C2/internal/core/auth"
+	"github.com/mati-olivera/R2C2/internal/core/broadcaster"
 	"github.com/mati-olivera/R2C2/internal/core/listeners"
 	"github.com/mati-olivera/R2C2/internal/core/logger"
 	"github.com/mati-olivera/R2C2/internal/core/tasks"
@@ -31,6 +32,7 @@ func StartServer(port int) error {
 	router := gin.New()
 
 	hub := NewHub()
+	broadcaster.SetBroadcaster(hub)
 	go hub.Run()
 
 	hubWriter := &LogAdapter{Hub: hub}
@@ -184,7 +186,9 @@ func StartServer(port int) error {
 
 		operatorId := "anakin" // FIXME:
 
-		responseMessage, err := aiService.Chat(operatorId, aiRequest.Message)
+		ctx := c.Request.Context()
+
+		responseMessage, err := aiService.Chat(ctx, operatorId, aiRequest.Message)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
