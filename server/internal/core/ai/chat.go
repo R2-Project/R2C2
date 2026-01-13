@@ -5,9 +5,7 @@ import (
 	"fmt"
 )
 
-func (s *AIService) Chat(operatorId string, userMessage string) (string, error) {
-
-	ctx := context.Background() // FIXME: pass real context
+func (s *AIService) Chat(ctx context.Context, operatorId string, userMessage string) (string, error) {
 
 	s.historyMutex.Lock()
 	if _, exists := s.history[operatorId]; !exists {
@@ -27,7 +25,7 @@ func (s *AIService) Chat(operatorId string, userMessage string) (string, error) 
 
 	// limit infinite recursion
 	for i := 0; i < 5; i++ {
-		tools := s.Registry.GetDefinitions()
+		tools := s.Tools.GetDefinitions()
 
 		resp, err := s.provider.Query(ctx, messages, tools)
 		if err != nil {
@@ -45,7 +43,7 @@ func (s *AIService) Chat(operatorId string, userMessage string) (string, error) 
 		for _, toolCall := range resp.ToolCalls {
 			fmt.Printf("[AI] Calling Tool: %s args: %s\n", toolCall.Name, toolCall.Args)
 
-			resultStr, err := s.Registry.Execute(toolCall.Name, toolCall.Args)
+			resultStr, err := s.Tools.Execute(toolCall.Name, toolCall.Args)
 			if err != nil {
 				resultStr = fmt.Sprintf("Error executing tool: %v", err)
 			}

@@ -43,9 +43,7 @@ export default function Listeners({ onAddView }: Props) {
       if(!serverUrl.includes("http")) {
         serverUrl = `http://${serverUrl}`;
       }
-      const token = localStorage.getItem("token");
-      const headers = token ? { "Authorization": `Bearer ${token}` } : {};
-      const response = await Request("GET", `${serverUrl}/listeners`, headers, "");
+      const response = await Request("GET", `${serverUrl}/listeners`, {}, "");
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         const data = JSON.parse(response.body);
