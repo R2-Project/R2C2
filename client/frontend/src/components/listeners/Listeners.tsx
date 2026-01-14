@@ -35,6 +35,8 @@ export default function Listeners({ onAddView }: Props) {
     setError(null)
     try {
       let serverUrl = localStorage.getItem("serverUrl");
+      const token = localStorage.getItem("token");
+
       if (!serverUrl) {
         throw new Error("Server URL not found");
       }
@@ -43,7 +45,8 @@ export default function Listeners({ onAddView }: Props) {
       if(!serverUrl.includes("http")) {
         serverUrl = `http://${serverUrl}`;
       }
-      const response = await Request("GET", `${serverUrl}/listeners`, {}, "");
+      const headers = token ? { "Authorization": `Bearer ${token}` } : {};
+      const response = await Request("GET", `${serverUrl}/listeners`, headers, "");
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         const data = JSON.parse(response.body);

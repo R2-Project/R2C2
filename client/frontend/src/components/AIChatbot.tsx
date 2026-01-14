@@ -1,12 +1,15 @@
 import { useState, useEffect, useRef } from "react";
 import * as ScrollArea from "@radix-ui/react-scroll-area";
 import R2C2Icon from '@/assets/images/r2c2-1.jpeg';
+import { Request } from "../../wailsjs/go/main/App";
+import { Loader2, Send } from "lucide-react";
 
 function Chatbot() {
   const [messages, setMessages] = useState([
     { id: 1, text: "Hi! How can I help you today?", sender: "bot" },
   ]);
   const [inputValue, setInputValue] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const viewportRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -20,27 +23,70 @@ function Chatbot() {
     scrollToBottom();
   }, [messages]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const newText = inputValue.trim();
-    if (!newText) return;
+    if (!newText || isLoading) return;
 
     setMessages((prevMessages) => [
       ...prevMessages,
       { id: prevMessages.length + 1, text: newText, sender: "user" },
     ]);
     setInputValue("");
+    setIsLoading(true);
 
-    setTimeout(() => {
+    try {
+      let serverUrl = localStorage.getItem("serverUrl");
+      const token = localStorage.getItem("token");
+
+      if (!serverUrl) {
+          throw new Error("Server URL not found");
+      }
+      
+      if(!serverUrl.includes("http")) {
+          serverUrl = `http://${serverUrl}`;
+      }
+
+      const headers = token ? { "Authorization": `Bearer ${token}` } : {};
+      const body = JSON.stringify({ message: newText });
+      
+      const response = await Request("POST", `${serverUrl}/ai/query`, headers, body);
+      
+      let botResponse = "I'm sorry, I couldn't process that request.";
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+          try {
+             // Try to parse as JSON first
+             const data = JSON.parse(response.body);
+             botResponse = data.message || data.response || response.body; 
+          } catch {
+              // specific to string response
+              botResponse = response.body;
+          }
+      } else {
+          botResponse = `Error: ${response.statusCode} - ${response.body}`;
+      }
+
       setMessages((prevMessages) => [
         ...prevMessages,
         {
           id: prevMessages.length + 1,
-          text: `You said: "${newText}"`,
+          text: botResponse,
           sender: "bot",
         },
       ]);
-    }, 1000);
+
+    } catch (error: any) {
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        {
+          id: prevMessages.length + 1,
+          text: `Error: ${error.message || "Failed to communicate with AI"}`,
+          sender: "bot",
+        },
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -93,12 +139,14 @@ function Chatbot() {
           onChange={(e) => setInputValue(e.target.value)}
           placeholder="Type your message..."
           className="flex-grow px-3 py-2 border border-input rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary bg-muted text-foreground placeholder-muted-foreground"
+          disabled={isLoading}
         />
         <button
           type="submit"
-          className="bg-primary text-primary-foreground px-4 py-2 rounded-r-md hover:bg-primary/90 focus:outline-none transition-colors font-medium"
+          disabled={isLoading}
+          className="bg-primary text-primary-foreground px-4 py-2 rounded-r-md hover:bg-primary/90 focus:outline-none transition-colors font-medium flex items-center justify-center min-w-[80px]"
         >
-          Send
+          {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Send"}
         </button>
       </form>
     </div>

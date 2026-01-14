@@ -38,9 +38,15 @@ export default function Logs() {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Check if running in Wails context
+    if (!(window as any).runtime) {
+        return;
+    }
+
     // Subscribe to c2:event
     const cancelC2Event = EventsOn("c2:event", (message: string) => {
       try {
+        console.log("Received log message:", message);
         const logEntry: any = JSON.parse(message);
         
         // Handle zerolog 'msg' field
@@ -89,8 +95,8 @@ export default function Logs() {
     });
 
     return () => {
-      cancelC2Event();
-      cancelNetworkError();
+      if (cancelC2Event) cancelC2Event();
+      if (cancelNetworkError) cancelNetworkError();
     };
   }, []);
 
