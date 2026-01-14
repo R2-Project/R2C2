@@ -1,4 +1,5 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
+import { EventsOn } from '../../wailsjs/runtime/runtime';
 import MenuBar from "@/components/MenuBar";
 import { Model, Actions, TabNode, IJsonModel, Layout, DockLocation, TabSetNode, BorderNode, ITabSetRenderValues, ITabRenderValues } from 'flexlayout-react';
 import Sessions from '@/components/Sessions';
@@ -238,6 +239,47 @@ export default function C2Dashboard() {
       }
     }
   };
+
+  useEffect(() => {
+    const handleNavigate = (data: string) => {
+      try {
+        console.log("Navigating to:", data);
+        let navData;
+        try {
+          navData = JSON.parse(data);
+        } catch {
+          // If not JSON, assume string is component name
+          navData = { component: data };
+        }
+
+        if (typeof navData === 'string') {
+            navData = { component: navData };
+        }
+
+        const componentName = navData.component || navData.view;
+        // Map common names if needed, or rely on caller sending correct component IDs
+        // Default title to component name capitalized if not provided
+        if (!componentName) {
+            console.error("Invalid navigation data: missing component or view property", navData);
+            return;
+        }
+
+        const title = navData.title || (componentName.charAt(0).toUpperCase() + componentName.slice(1));
+        const target = navData.target || 'bottomTabset';
+        const config = navData.config;
+
+        onAddView(componentName, title, target, config);
+      } catch (e) {
+        console.error("Error processing navigation event:", e);
+      }
+    };
+
+    if ((window as any).runtime) {
+      const unsubscribe = EventsOn("ui:navigate", handleNavigate);
+      return () => unsubscribe();
+    }
+  }, []); // Empty dependency array means this runs once on mount
+
 
   return (
     <div className="flex flex-col h-screen bg-background text-foreground">

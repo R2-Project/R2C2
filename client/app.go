@@ -3,6 +3,7 @@ package main
 import (
 	"client/networking"
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -11,6 +12,11 @@ import (
 type App struct {
 	ctx        context.Context
 	secureConn *networking.SecureWebSocket
+}
+
+type BroadcastEvent struct {
+	Event string `json:"event"`
+	Data  string `json:"data"`
 }
 
 func NewApp() *App {
@@ -39,8 +45,13 @@ func (a *App) ListenC2Events(secureConn *networking.SecureWebSocket) {
 		}
 
 		fmt.Printf("Received C2 event: %s\n", string(message))
-		// TODO: handle log events and task results
 
-		runtime.EventsEmit(a.ctx, "c2:event", string(message))
+		var event BroadcastEvent
+		err = json.Unmarshal(message, &event)
+		if err == nil && event.Event != "" {
+			runtime.EventsEmit(a.ctx, event.Event, event.Data)
+		} else {
+			runtime.EventsEmit(a.ctx, "c2:event", string(message))
+		}
 	}
 }

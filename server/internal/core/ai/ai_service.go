@@ -48,7 +48,7 @@ func (s *AIService) SetupTools() {
 			return string(result), nil
 		})
 
-	//  Tool: UI Navigatio
+	//  Tool: UI Navigation
 	s.Tools.Register(
 		"ui_navigate",
 		"Opens a specific tab or page in the operator's dashboard. Use this when the user asks to 'see', 'show', or 'go to' a specific view.",
@@ -65,8 +65,16 @@ func (s *AIService) SetupTools() {
 		}`,
 		func(args map[string]interface{}) (string, error) {
 
-			// FIXME: send an structured event instead of raw JSON
-			broadcaster.BroadcastEvent(broadcaster.UI_NAVIGATE_EVENT, []byte(fmt.Sprintf(`{"view":"%s"}`, args["view"])))
+			data := broadcaster.UINavigateEvent{
+				View: args["view"].(string),
+			}
+
+			payload, err := json.Marshal(data)
+			if err != nil {
+				return "", err
+			}
+
+			broadcaster.BroadcastEvent(broadcaster.UI_NAVIGATE_EVENT, string(payload))
 
 			return fmt.Sprintf("Success: Navigation signal sent for view '%s'", args["view"]), nil
 		})

@@ -19,10 +19,10 @@ func SetBroadcaster(b Broadcaster) {
 
 type broadcastEvent struct {
 	Event string `json:"event"`
-	Data  []byte `json:"data"`
+	Data  string `json:"data"`
 }
 
-func BroadcastEvent(event string, message []byte) {
+func BroadcastEvent(event string, message string) {
 	if instance != nil {
 		result, err := json.Marshal(broadcastEvent{
 			Event: event,
