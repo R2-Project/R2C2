@@ -42,8 +42,9 @@ func StartServer(port int) error {
 	listenersRepo := database.InitListenersRepository(config.DB.GetInstance())
 	tasksRepo := database.InitTasksRepository(config.DB.GetInstance())
 	taskManager := tasks.CreateTaskManager(tasksRepo, hub)
-	sessionsRepostiory := database.InitSessionsRepository(config.DB.GetInstance())
-	sessionsService := agents.NewSessionsService(sessionsRepostiory)
+	sessionsRepository := database.InitSessionsRepository(config.DB.GetInstance())
+	sessionsService := agents.NewSessionsService(sessionsRepository)
+	agentsService := agents.NewAgentsService(sessionsRepository)
 	listenersService := listeners.NewListenersService(listenersRepo, taskManager, sessionsService)
 
 	provider, err := ai.NewProvider(config.GetConfig().AIProvider)
@@ -176,6 +177,15 @@ func StartServer(port int) error {
 		return
 	})
 
+	router.GET("/tasks", HttpAuth(config.GetConfig().JWTSecret, *operatorsRepository), func(c *gin.Context) {
+		tasks, err := taskManager.GetQueuedTasks()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, tasks)
+	})
+
 	router.POST("/ai/query", HttpAuth(config.GetConfig().JWTSecret, *operatorsRepository), func(c *gin.Context) {
 
 		var aiRequest ai.QueryRequest
@@ -195,6 +205,29 @@ func StartServer(port int) error {
 		}
 
 		c.JSON(http.StatusOK, gin.H{"message": responseMessage})
+	})
+
+	router.GET("/sessions", HttpAuth(config.GetConfig().JWTSecret, *operatorsRepository), func(c *gin.Context) {
+		sessions, err := sessionsService.GetSessions()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, sessions)
+	})
+
+	router.POST("/agents", HttpAuth(config.GetConfig().JWTSecret, *operatorsRepository), func(c *gin.Context) {
+		var agentData agents.NewAgentRequest
+		if err := c.BindJSON(&agentData); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+			return
+		}
+		agent, err := agentsService.CreateAgent(agentData)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusCreated, agent)
 	})
 
 	sport := strconv.Itoa(port)

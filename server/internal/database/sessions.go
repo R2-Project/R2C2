@@ -34,7 +34,7 @@ func (r *SessionsRepository) GetSessions() ([]agents.Agent, error) {
 	return sessions, nil
 }
 
-func (r *SessionsRepository) SaveSession(agent agents.Agent) error {
+func (r *SessionsRepository) SaveSession(agent *agents.Agent) error {
 	_, err := r.db.Exec(`
 		INSERT INTO sessions (id, listener_id, status, arch, format, timestamp, last_ping, computer, user, internal_ip, public_ip)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)

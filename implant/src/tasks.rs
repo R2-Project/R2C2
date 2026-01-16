@@ -12,12 +12,13 @@ pub struct Task {
     pub timestamp: String,
 }
 
-struct Tasks {
+pub struct Tasks {
     tasks: VecDeque<Task>,
 }
 
 impl Tasks {
-    fn queue(&mut self, task: Task) -> Result<(), String> {
+    pub fn queue(&mut self, task: Task) -> Result<(), String> {
+        println!("Queueing task: {:?}", task); // Debug print
         self.tasks.push_back(task);
 
         Ok(())
@@ -49,7 +50,7 @@ mod tests {
         };
 
         let task = Task {
-            id: 1,
+            id: "abc123".into(),
             agent_id: "agent1".into(),
             command: "ls".into(),
             status: "pending".into(),

@@ -17,7 +17,7 @@ func (s *SessionsService) GetSessions() ([]Agent, error) {
 }
 
 func (s *SessionsService) SaveSession(agent Agent) error {
-	return s.repo.SaveSession(agent)
+	return s.repo.SaveSession(&agent)
 }
 
 func (s *SessionsService) UpdateLastPing(agentId string, timestamp time.Time) error {
@@ -29,7 +29,7 @@ func (s *SessionsService) UpdateLastPing(agentId string, timestamp time.Time) er
 	for _, agent := range agents {
 		if agent.Id == agentId {
 			agent.LastPing = timestamp.Format(time.RFC3339)
-			return s.repo.SaveSession(agent)
+			return s.repo.SaveSession(&agent)
 		}
 	}
 
