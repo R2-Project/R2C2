@@ -82,3 +82,11 @@ func (tm *TaskManager) SubmitTaskResult(task TaskResult) error {
 
 	return nil
 }
+
+func (tm *TaskManager) GetQueuedTasks() (*[]Task, error) {
+	tasks, err := tm.TaskRepository.GetTasks()
+	if err != nil {
+		return nil, err
+	}
+	return tasks, nil
+}

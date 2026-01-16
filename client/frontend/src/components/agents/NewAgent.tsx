@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Request } from "../../../wailsjs/go/main/App"
 
 type Props = {
   open: boolean
@@ -43,16 +44,40 @@ export default function NewAgent({ open, onOpenChange, onCreated }: Props) {
 
     setLoading(true)
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      let serverUrl = localStorage.getItem("serverUrl");
+      const token = localStorage.getItem("token");
+
+      if (!serverUrl) {
+        throw new Error("Server URL not found");
+      }
+
+      if(!serverUrl.includes("http")) {
+        serverUrl = `http://${serverUrl}`;
+      }
+
+      const headers = token ? { "Authorization": `Bearer ${token}` } : {};
       
-      setSuccess("Agent payload generated successfully")
-      setName("")
-      // Reset other fields if needed
+      const payload = {
+        name,
+        listener_id: listenerUrl,
+        arch,
+        format,
+        os
+      };
+
+      const response = await Request("POST", `${serverUrl}/agents`, headers, JSON.stringify(payload));
       
-      onCreated?.()
-      // close after a short delay so user sees success
-      setTimeout(() => onOpenChange(false), 600)
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        setSuccess("Agent created successfully")
+        setName("")
+        // optionally reset other fields
+        onCreated?.()
+        // close after a short delay so user sees success
+        setTimeout(() => onOpenChange(false), 600)
+      } else {
+        throw new Error(response.error || `Failed to create agent: ${response.statusCode}`);
+      }
+
     } catch (e: any) {
       setError(e?.message || "Failed to generate agent")
     } finally {

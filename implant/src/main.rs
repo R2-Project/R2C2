@@ -6,6 +6,8 @@ use std::{thread, time::Duration};
 
 use transport::{ActiveTransport, Transport};
 
+use crate::tasks::Tasks;
+
 fn load_transport() -> ActiveTransport {
     ActiveTransport::new()
 }
@@ -37,9 +39,18 @@ async fn main() {
     loop {
         // Receive tasks/response
         match client.fetch_tasks(&beacon).await {
-            Ok(data) => {
-                if !data.is_empty() {
-                    print!("Received tasks: {:?}\n", data);
+            Ok(tasks_data) => {
+                if !tasks_data.is_empty() {
+                    print!("Received tasks: {:?}\n", tasks_data);
+                    // for task in tasks_data.iter() {
+                    //     let mut tasks = tasks {
+                    //         tasks: std::collections::vecdeque::new(),
+                    //     };
+                    //     if let err(e) = tasks.queue(task.clone()) {
+                    //         eprintln!("failed to queue task {}: {}", task.id, e);
+                    //         continue;
+                    //     }
+                    // }
                 }
             }
             Err(e) => {

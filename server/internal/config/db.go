@@ -179,7 +179,7 @@ func (d *Database) createSessionsTable() error {
 		"user" TEXT,
 		"internal_ip" TEXT,
 		"public_ip" TEXT,
-		"timestamp" DATETIME,
+		"timestamp" INT,
 		"last_ping" DATETIME
 	);`
 

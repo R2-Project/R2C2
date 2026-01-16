@@ -2,6 +2,7 @@ package agents
 
 type Agent struct {
 	Id         string `json:"id"`
+	Name       string `json:"name"`
 	ListenerId string `json:"listener_id"`
 	Status     string `json:"status"`
 	Arch       string `json:"arch"`
@@ -21,4 +22,11 @@ type Agent struct {
 func (a *Agent) Build() error {
 	// Placeholder for build logic
 	return nil
+}
+
+type NewAgentRequest struct {
+	Name       string `json:"name"`
+	ListenerId string `json:"listener_id"`
+	Arch       string `json:"arch"`
+	Format     string `json:"format"`
 }
