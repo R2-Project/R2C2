@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -23,11 +23,61 @@ export default function NewAgent({ open, onOpenChange, onCreated }: Props) {
   const [name, setName] = useState("")
   const [os, setOs] = useState("windows")
   const [arch, setArch] = useState("x64")
-  const [listenerUrl, setListenerUrl] = useState("http://localhost:8080")
+  const [listenerId, setListenerId] = useState("")
+  const [listeners, setListeners] = useState<any[]>([])
   const [format, setFormat] = useState("exe")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (open) {
+      fetchListeners()
+    } else {
+        setTimeout(() => {
+            document.body.style.pointerEvents = "";
+        }, 500);
+    }
+  }, [open])
+
+  async function fetchListeners() {
+    try {
+      let serverUrl = localStorage.getItem("serverUrl");
+      const token = localStorage.getItem("token");
+
+      if (!serverUrl) return;
+
+      if(!serverUrl.includes("http")) {
+        serverUrl = `http://${serverUrl}`;
+      }
+      const headers = token ? { "Authorization": `Bearer ${token}` } : {};
+      const response = await Request("GET", `${serverUrl}/listeners`, headers, "");
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        const data = JSON.parse(response.body);
+        if (Array.isArray(data)) {
+            const parsedData = data.map((item: any) => {
+              let config = {};
+              try {
+                  config = JSON.parse(item.config);
+              } catch (e) {
+                  console.error("Failed to parse config for listener", item.id, e);
+              }
+              return {
+                  ...item,
+                  ...config
+              };
+            });
+            setListeners(parsedData);
+            if (parsedData.length > 0 && !listenerId) {
+                setListenerId(parsedData[0].id)
+            }
+        }
+      }
+    } catch (e) {
+        console.error("Failed to fetch listeners", e)
+    }
+  }
 
   async function handleCreate() {
     setError(null)
@@ -37,8 +87,8 @@ export default function NewAgent({ open, onOpenChange, onCreated }: Props) {
       setError("Name is required")
       return
     }
-    if (!listenerUrl.trim()) {
-      setError("Listener URL is required")
+    if (!listenerId) {
+      setError("Listener is required")
       return
     }
 
@@ -57,9 +107,10 @@ export default function NewAgent({ open, onOpenChange, onCreated }: Props) {
 
       const headers = token ? { "Authorization": `Bearer ${token}` } : {};
       
+      const selectedListener = listeners.find(l => l.id === listenerId);
       const payload = {
         name,
-        listener_id: listenerUrl,
+        listener: `${selectedListener?.protocol} - ${selectedListener?.name}`,
         arch,
         format,
         os
@@ -134,12 +185,17 @@ export default function NewAgent({ open, onOpenChange, onCreated }: Props) {
           </div>
 
           <div className="space-y-2">
-            <Label>Listener URL</Label>
-            <Input
-              value={listenerUrl}
-              onChange={(e) => setListenerUrl(e.target.value)}
-              placeholder="http://c2.example.com:80"
-            />
+            <Label>Listener</Label>
+            <Select value={listenerId} onValueChange={setListenerId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select Listener" />
+              </SelectTrigger>
+              <SelectContent>
+                {listeners.map((l) => (
+                    <SelectItem key={l.id} value={l.id}>{l.name} ({l.protocol} - {l.port})</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">

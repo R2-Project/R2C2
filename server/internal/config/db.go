@@ -171,7 +171,7 @@ func (d *Database) createTasksTable() error {
 func (d *Database) createSessionsTable() error {
 	createTableSQL := `CREATE TABLE IF NOT EXISTS sessions (
 		"id" TEXT NOT NULL PRIMARY KEY,
-		"listener_id" TEXT,
+		"listener" TEXT,
 		"status" TEXT,
 		"arch" TEXT,
 		"format" TEXT,
@@ -180,7 +180,8 @@ func (d *Database) createSessionsTable() error {
 		"internal_ip" TEXT,
 		"public_ip" TEXT,
 		"timestamp" INT,
-		"last_ping" DATETIME
+		"last_ping" DATETIME NULL,
+		"pid" INT NULL
 	);`
 
 	statement, err := d.db.Prepare(createTableSQL)

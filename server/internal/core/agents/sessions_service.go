@@ -1,6 +1,10 @@
 package agents
 
-import "time"
+import (
+	"time"
+
+	"github.com/mati-olivera/R2C2/internal/core/broadcaster"
+)
 
 type SessionsService struct {
 	repo SessionsRepository
@@ -29,6 +33,9 @@ func (s *SessionsService) UpdateLastPing(agentId string, timestamp time.Time) er
 	for _, agent := range agents {
 		if agent.Id == agentId {
 			agent.LastPing = timestamp.Format(time.RFC3339)
+
+			broadcaster.BroadcastEvent(broadcaster.REFRESH_SESSIONS_EVENT, "")
+
 			return s.repo.SaveSession(&agent)
 		}
 	}

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { ChevronRight } from "lucide-react";
 
 interface ConsoleEntry {
   id: string;
@@ -75,7 +76,7 @@ export default function CommandInterface({ sessionId }: CommandInterfaceProps) {
   const [currentCommand, setCurrentCommand] = useState("");
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
-  const [currentPrompt, setCurrentPrompt] = useState(`${sessionId ? sessionId : "beacon"}>`);
+  const [currentPrompt, setCurrentPrompt] = useState("beacon");
   const consoleEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -221,7 +222,10 @@ export default function CommandInterface({ sessionId }: CommandInterfaceProps) {
       
       <div className="mt-auto pt-2">
         <div className="flex items-center space-x-2 border c2-border rounded bg-white/5 px-3 py-2 focus-within:ring-1 focus-within:ring-[var(--c2-accent)] focus-within:border-transparent transition-all">
-          <span className="c2-text-accent font-bold shrink-0 select-none">{currentPrompt}</span>
+          <span className="c2-text-accent font-bold shrink-0 select-none flex items-center">
+            {currentPrompt}
+            <ChevronRight className="w-4 h-4 ml-1" />
+          </span>
           <input
             ref={inputRef}
             type="text"

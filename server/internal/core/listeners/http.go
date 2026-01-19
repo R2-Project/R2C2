@@ -3,8 +3,6 @@ package listeners
 import (
 	"context"
 	"encoding/json"
-	"errors"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -54,10 +52,6 @@ func (h *HttpListener) Start() error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
-	if h.Status == "running" {
-		return errors.New("listener is already running")
-	}
-
 	gin.SetMode(gin.ReleaseMode)
 
 	router := gin.New()
@@ -94,8 +88,8 @@ func (h *HttpListener) Start() error {
 
 	h.Status = "running"
 
+	// TODO: kill listeners if server dies
 	go func() {
-		logger.Info("Starting HTTP listener", "listener_id", h.Id, "host", h.Host, "port", port)
 
 		if err := h.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			logger.Error("HTTP Listener Error", err, "listener_id", h.Id)
@@ -106,7 +100,7 @@ func (h *HttpListener) Start() error {
 		h.mu.Unlock()
 	}()
 
-	log.Printf("HTTP listener %s ID: %s started on %s:%s", h.Name, h.Id, h.Host, port)
+	logger.Info("Started HTTP listener", "listener_id", h.Id, "host", h.Host, "port", port)
 	return nil
 }
 
