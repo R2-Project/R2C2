@@ -26,6 +26,10 @@ impl Transport for HttpConnection {
             return Err(format!("Request failed with status: {}", response.status()).into());
         }
 
+        if response.content_length() == Some(0) {
+            return Ok(Vec::new());
+        }
+
         let tasks = response.json::<Vec<Task>>().await?;
 
         Ok(tasks)

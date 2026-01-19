@@ -18,14 +18,15 @@ func NewAgentsService(sessionsRepo SessionsRepository) *AgentsService {
 
 func (as *AgentsService) CreateAgent(data NewAgentRequest) (*Agent, error) {
 
+	shortUUID := uuid.New().String()[:8]
 	agent := &Agent{
-		Id:         uuid.New().String(),
-		Name:       data.Name,
-		ListenerId: data.ListenerId,
-		Status:     "inactive", // TODO:
-		Arch:       data.Arch,
-		Format:     data.Format,
-		Timestamp:  time.Now().Unix(),
+		Id:        shortUUID,
+		Name:      data.Name,
+		Listener:  data.Listener, // might populate this data later
+		Status:    "inactive",    // TODO:
+		Arch:      data.Arch,
+		Format:    data.Format,
+		Timestamp: time.Now().Unix(),
 	}
 
 	err := as.SessionsRepository.SaveSession(agent)

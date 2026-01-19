@@ -1,12 +1,12 @@
 package agents
 
 type Agent struct {
-	Id         string `json:"id"`
-	Name       string `json:"name"`
-	ListenerId string `json:"listener_id"`
-	Status     string `json:"status"`
-	Arch       string `json:"arch"`
-	Format     string `json:"format"`
+	Id       string `json:"id"`
+	Name     string `json:"name"`
+	Listener string `json:"listener"`
+	Status   string `json:"status"`
+	Arch     string `json:"arch"`
+	Format   string `json:"format"`
 	// Sleep and jitter?
 	Timestamp int64  `json:"timestamp"`
 	LastPing  string `json:"last_ping"`
@@ -16,6 +16,7 @@ type Agent struct {
 	User       string `json:"user"`
 	InternalIp string `json:"internal_ip"`
 	PublicIp   string `json:"public_ip"`
+	Pid        int64  `json:"process,omitempty"`
 }
 
 // Generates the implant to be deployed on the target system given the agent config
@@ -25,8 +26,8 @@ func (a *Agent) Build() error {
 }
 
 type NewAgentRequest struct {
-	Name       string `json:"name"`
-	ListenerId string `json:"listener_id"`
-	Arch       string `json:"arch"`
-	Format     string `json:"format"`
+	Name     string `json:"name"`
+	Listener string `json:"listener"`
+	Arch     string `json:"arch"`
+	Format   string `json:"format"`
 }

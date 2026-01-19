@@ -138,21 +138,25 @@ export default function Listeners({ onAddView }: Props) {
   }
 
   return (
-    <ContextMenu>
-      <ContextMenuTrigger className="w-full h-full min-h-[200px] block">
-        {renderContent()}
-      </ContextMenuTrigger>
-      <ContextMenuContent>
-        <ContextMenuItem onClick={() => setIsNewListenerOpen(true)}>
-          Create new listener
-        </ContextMenuItem>
-        <ContextMenuItem onClick={() => setIsNewAgentOpen(true)}>
-          Create new Agent
-        </ContextMenuItem>
-      </ContextMenuContent>
+    <>
+      <ContextMenu>
+        <ContextMenuTrigger className="w-full h-full min-h-[200px] block">
+          {renderContent()}
+        </ContextMenuTrigger>
+        <ContextMenuContent>
+          <ContextMenuItem onClick={() => setIsNewListenerOpen(true)}>
+            Create new listener
+          </ContextMenuItem>
+          <ContextMenuItem onClick={() => setIsNewAgentOpen(true)}>
+            Create new Agent
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
       <NewListener open={isNewListenerOpen} onOpenChange={setIsNewListenerOpen} onCreated={load} />
-      <NewAgent open={isNewAgentOpen} onOpenChange={setIsNewAgentOpen} />
-    </ContextMenu>
+      <NewAgent open={isNewAgentOpen} onOpenChange={setIsNewAgentOpen} onCreated={() => {
+        window.dispatchEvent(new Event("refresh-sessions"));
+      }} />
+    </>
   )
 }
 

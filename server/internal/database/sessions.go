@@ -17,7 +17,7 @@ func InitSessionsRepository(db *sql.DB) *SessionsRepository {
 }
 
 func (r *SessionsRepository) GetSessions() ([]agents.Agent, error) {
-	rows, err := r.db.Query("SELECT id, listener_id, status, arch, format, timestamp, last_ping, computer, user, internal_ip, public_ip FROM sessions")
+	rows, err := r.db.Query("SELECT id, listener, status, arch, format, timestamp, last_ping, computer, user, internal_ip, public_ip, pid FROM sessions")
 	if err != nil {
 		return nil, err
 	}
@@ -26,7 +26,7 @@ func (r *SessionsRepository) GetSessions() ([]agents.Agent, error) {
 	var sessions []agents.Agent
 	for rows.Next() {
 		var agent agents.Agent
-		if err := rows.Scan(&agent.Id, &agent.ListenerId, &agent.Status, &agent.Arch, &agent.Format, &agent.Timestamp, &agent.LastPing, &agent.Computer, &agent.User, &agent.InternalIp, &agent.PublicIp); err != nil {
+		if err := rows.Scan(&agent.Id, &agent.Listener, &agent.Status, &agent.Arch, &agent.Format, &agent.Timestamp, &agent.LastPing, &agent.Computer, &agent.User, &agent.InternalIp, &agent.PublicIp, &agent.Pid); err != nil {
 			return nil, err
 		}
 		sessions = append(sessions, agent)
@@ -36,10 +36,10 @@ func (r *SessionsRepository) GetSessions() ([]agents.Agent, error) {
 
 func (r *SessionsRepository) SaveSession(agent *agents.Agent) error {
 	_, err := r.db.Exec(`
-		INSERT INTO sessions (id, listener_id, status, arch, format, timestamp, last_ping, computer, user, internal_ip, public_ip)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		INSERT INTO sessions (id, listener, status, arch, format, timestamp, last_ping, computer, user, internal_ip, public_ip, pid)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT(id) DO UPDATE SET
-			listener_id=excluded.listener_id,
+			listener=excluded.listener,
 			status=excluded.status,
 			arch=excluded.arch,
 			format=excluded.format,
@@ -48,7 +48,8 @@ func (r *SessionsRepository) SaveSession(agent *agents.Agent) error {
 			computer=excluded.computer,
 			user=excluded.user,
 			internal_ip=excluded.internal_ip,
-			public_ip=excluded.public_ip
-	`, agent.Id, agent.ListenerId, agent.Status, agent.Arch, agent.Format, agent.Timestamp, agent.LastPing, agent.Computer, agent.User, agent.InternalIp, agent.PublicIp)
+			public_ip=excluded.public_ip,
+			pid=excluded.pid
+	`, agent.Id, agent.Listener, agent.Status, agent.Arch, agent.Format, agent.Timestamp, agent.LastPing, agent.Computer, agent.User, agent.InternalIp, agent.PublicIp, agent.Pid)
 	return err
 }

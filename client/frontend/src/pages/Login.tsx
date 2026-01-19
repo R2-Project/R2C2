@@ -67,7 +67,7 @@ export default function Login() {
           title: "Login successful",
           description: "Welcome back!",
         });
-        setLocation("/");
+        setTimeout(() => setLocation("/"), 200);
       } else {
         throw new Error("No token received");
       }

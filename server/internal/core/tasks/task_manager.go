@@ -4,23 +4,17 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/mati-olivera/R2C2/internal/core/broadcaster"
 	"github.com/mati-olivera/R2C2/internal/core/logger"
 )
 
-type EventHub interface {
-	Run()
-	BroadcastMessage(message []byte)
-}
-
 type TaskManager struct {
 	TaskRepository TaskRepository
-	eventHub       EventHub
 }
 
-func CreateTaskManager(taskRepository TaskRepository, eventHub EventHub) *TaskManager {
+func CreateTaskManager(taskRepository TaskRepository) *TaskManager {
 	return &TaskManager{
 		TaskRepository: taskRepository,
-		eventHub:       eventHub,
 	}
 }
 
@@ -77,8 +71,7 @@ func (tm *TaskManager) SubmitTaskResult(task TaskResult) error {
 		return err
 	}
 
-	// send task result
-	tm.eventHub.BroadcastMessage([]byte(taskResult))
+	broadcaster.BroadcastEvent(broadcaster.TASK_RESULT_EVENT, string(taskResult))
 
 	return nil
 }

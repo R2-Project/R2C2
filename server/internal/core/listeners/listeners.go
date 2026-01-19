@@ -50,7 +50,7 @@ func (l *ListenersService) CreateHttpListener(request NewHttpListenerRequest) (*
 		Secure:          request.Secure,
 		Clients:         nil,
 		LiveSince:       time.Now().Format(time.RFC3339),
-		Status:          "created",
+		Status:          "running",
 		Cert:            request.Cert,
 		ResponseHeaders: request.ResponseHeaders,
 		Uris:            request.Uris,
