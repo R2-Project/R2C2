@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Request } from "../../wailsjs/go/main/App"
+import { EventsOn } from "../../wailsjs/runtime/runtime"
 
 interface Session {
   id: string
@@ -11,7 +12,7 @@ interface Session {
   format: string
   timestamp: number
   last_ping: string
-  computer: string
+  hostname: string
   user: string
   internal_ip: string
   public_ip: string
@@ -32,9 +33,30 @@ export default function Component({ onOpenSession }: SessionsProps) {
   useEffect(() => {
     fetchSessions()
 
-    const handleRefresh = () => fetchSessions()
+    const handleRefresh = () => {
+      fetchSessions()
+      setNow(Date.now())
+    }
     window.addEventListener("refresh-sessions", handleRefresh)
     
+    // Listen for Wails runtime event
+    const cancelWailsEvent = EventsOn("agent:beacon_updated", (data: any) => {
+        try {
+            const updatedSession = typeof data === 'string' ? JSON.parse(data) : data;
+            setSessions(prevSessions => {
+                return prevSessions.map(session => {
+                    if (session.id === updatedSession.id) {
+                        return { ...session, ...updatedSession };
+                    }
+                    return session;
+                });
+            });
+            setNow(Date.now());
+        } catch (e) {
+            console.error("Failed to parse beacon update", e);
+        }
+    });
+
     // Update 'now' every 2000ms to refresh last ping timers
     const interval = setInterval(() => {
       setNow(Date.now())
@@ -42,6 +64,7 @@ export default function Component({ onOpenSession }: SessionsProps) {
 
     return () => {
       window.removeEventListener("refresh-sessions", handleRefresh)
+      cancelWailsEvent?.()
       clearInterval(interval)
     }
   }, [])
@@ -116,7 +139,7 @@ export default function Component({ onOpenSession }: SessionsProps) {
               <TableHead>Internal</TableHead>
               <TableHead>Listener</TableHead>
               <TableHead>User</TableHead>
-              <TableHead>Computer</TableHead>
+              <TableHead>Hostname</TableHead>
               <TableHead>Process</TableHead>
               <TableHead>PID</TableHead>
               <TableHead>Arch</TableHead>
@@ -135,7 +158,7 @@ export default function Component({ onOpenSession }: SessionsProps) {
                 <TableCell>{item.internal_ip || "-"}</TableCell>
                 <TableCell>{item.listener || "-"}</TableCell>
                 <TableCell>{item.user || "-"}</TableCell>
-                <TableCell>{item.computer || "-"}</TableCell>
+                <TableCell>{item.hostname || "-"}</TableCell>
                 <TableCell>{item.process || "-"}</TableCell>
                 <TableCell>{item.pid || "-"}</TableCell>
                 <TableCell>{item.arch}</TableCell>

@@ -131,36 +131,82 @@ func (h *HttpListener) handleRequest(ctx *gin.Context) {
 		return
 	}
 
+	externalIp := ctx.ClientIP()
+
 	// TODO::
 	// - handle authentication
 	// - [DONE] this could be a task fetch request or a task result submission, hanle both
 	// - handle decrpytion (future)
+	// - Respond with sleep time and jitter
 
-	err := h.Sessions.UpdateLastPing(agentId, time.Now())
-	if err != nil {
-		logger.Error("Error updating last ping for agent "+agentId, err)
-		return
-	}
-
-	// TODO: make both cases his own reusable functions
-
-	// submitting task results
 	if ctx.Request.Method == http.MethodPost {
+		var registerData agents.AgentRegisterData
+		err := ctx.BindJSON(&registerData)
+		if err == nil {
+			// handle registration
+			agent, err := h.Sessions.GetSession(agentId)
+			if err != nil {
+				logger.Error("Error fetching agent session during registration "+agentId, err)
+				// if agent don't exist, return fake 404
+				ctx.String(404, "Not Found")
+				return
+			}
+			if agent.Status != "active" {
+				agent.Status = "active"
+				agent.Arch = registerData.Arch
+				agent.Platform = registerData.Platform
+				agent.Hostname = registerData.Hostname
+				agent.User = registerData.User
+				agent.InternalIp = registerData.InternalIp
+				agent.Pid = registerData.Pid
+				agent.ProcessName = registerData.ProcessName
+				agent.PublicIp = externalIp
+
+				err := h.Sessions.SaveSession(*agent)
+				if err != nil {
+					logger.Error("Error saving new agent session "+agentId, err)
+					ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Error saving new agent session"})
+					return
+				}
+
+				err = h.Sessions.UpdateLastPing(agentId, time.Now())
+				if err != nil {
+					logger.Error("Error updating last ping for agent "+agentId, err)
+					return
+				}
+
+				ctx.JSON(http.StatusOK, gin.H{"status": "registered"})
+				return
+			}
+		}
+
+		// submitting task results
 		var result tasks.TaskResult
 		if err := json.NewDecoder(ctx.Request.Body).Decode(&result); err != nil {
 			logger.Error("Error decoding task result", err)
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid task result format"})
 			return
 		}
 
-		err := h.TaskManager.SubmitTaskResult(result)
+		// FIXME: see if we can merge this two
+		err = h.TaskManager.SubmitTaskResult(result)
 		if err != nil {
 			logger.Error("error updating task status", err, "task_id", result.TaskId)
+		}
+		err = h.Sessions.UpdateLastPing(agentId, time.Now())
+		if err != nil {
+			logger.Error("Error updating last ping for agent "+agentId, err)
+			return
 		}
 	}
 
 	// fetching tasks
 	if ctx.Request.Method == http.MethodGet {
+		err := h.Sessions.UpdateLastPing(agentId, time.Now())
+		if err != nil {
+			logger.Error("Error updating last ping for agent "+agentId, err)
+			return
+		}
+
 		tasks, err := h.TaskManager.FetchTasks(agentId)
 		if err != nil {
 			logger.Error("Error fetching tasks", err)

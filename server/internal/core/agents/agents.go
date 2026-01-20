@@ -12,11 +12,13 @@ type Agent struct {
 	LastPing  string `json:"last_ping"`
 	// WorkingTime string `json:"working_time"`
 	// KillDate int64  `json:"kill_date"`
-	Computer   string `json:"computer"`
-	User       string `json:"user"`
-	InternalIp string `json:"internal_ip"`
-	PublicIp   string `json:"public_ip"`
-	Pid        int64  `json:"process,omitempty"`
+	Platform    string `json:"platform"`
+	Hostname    string `json:"hostname"`
+	User        string `json:"user"`
+	InternalIp  string `json:"internal_ip"`
+	PublicIp    string `json:"public_ip"`
+	Pid         int64  `json:"pid,omitempty"`
+	ProcessName string `json:"process"`
 }
 
 // Generates the implant to be deployed on the target system given the agent config
@@ -30,4 +32,14 @@ type NewAgentRequest struct {
 	Listener string `json:"listener"`
 	Arch     string `json:"arch"`
 	Format   string `json:"format"`
+}
+
+type AgentRegisterData struct {
+	Arch        string `json:"arch"`
+	Platform    string `json:"platform"`
+	Hostname    string `json:"hostname"`
+	User        string `json:"username"`
+	InternalIp  string `json:"ip"`
+	Pid         int64  `json:"pid"`
+	ProcessName string `json:"process_name"`
 }

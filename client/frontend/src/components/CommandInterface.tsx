@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { ChevronRight } from "lucide-react";
+import { Request } from "../../wailsjs/go/main/App";
+import { EventsOn } from "../../wailsjs/runtime/runtime";
 
 interface ConsoleEntry {
   id: string;
@@ -7,6 +9,7 @@ interface ConsoleEntry {
   content: string;
   timestamp: Date;
   level?: "info" | "success" | "warning" | "error";
+  raw?: boolean;
 }
 
 interface CommandInterfaceProps {
@@ -16,67 +19,18 @@ interface CommandInterfaceProps {
 export default function CommandInterface({ sessionId }: CommandInterfaceProps) {
   const [entries, setEntries] = useState<ConsoleEntry[]>([
     {
-      id: "1",
-      type: "system",
-      content: "[*] C2 Framework v2.1.3 - Command & Control Interface",
-      timestamp: new Date(),
-      level: "success",
-    },
-    {
       id: "2",
       type: "system",
       content: `[+] Connected to session: ${sessionId || "UNKNOWN"}`,
       timestamp: new Date(),
       level: "info",
-    },
-    {
-      id: "2",
-      type: "system",
-      content: "[+] Successfully connected to team server",
-      timestamp: new Date(),
-      level: "info",
-    },
-    {
-      id: "3",
-      type: "system",
-      content: "[*] Initializing listeners...",
-      timestamp: new Date(),
-      level: "info",
-    },
-    {
-      id: "4",
-      type: "system",
-      content: "[+] HTTP listener started on 192.168.1.100:8080",
-      timestamp: new Date(),
-      level: "success",
-    },
-    {
-      id: "5",
-      type: "system",
-      content: "[+] HTTPS listener started on 192.168.1.100:8443",
-      timestamp: new Date(),
-      level: "success",
-    },
-    {
-      id: "6",
-      type: "system",
-      content: "[*] Beacon received from 10.0.2.15",
-      timestamp: new Date(),
-      level: "info",
-    },
-    {
-      id: "7",
-      type: "system",
-      content: "[+] New session established: SESSION_001",
-      timestamp: new Date(),
-      level: "success",
-    },
+    }
   ]);
 
   const [currentCommand, setCurrentCommand] = useState("");
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
-  const [currentPrompt, setCurrentPrompt] = useState("beacon");
+  const currentPrompt = "beacon";
   const consoleEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -88,88 +42,110 @@ export default function CommandInterface({ sessionId }: CommandInterfaceProps) {
     inputRef.current?.focus();
   }, []);
 
-  const executeCommand = (command: string) => {
-    const commandEntry: ConsoleEntry = {
-      id: Date.now().toString(),
-      type: "command",
-      content: `${currentPrompt} ${command}`,
-      timestamp: new Date(),
-    };
+  // Listen for task results
+  useEffect(() => {
+      const cancelTaskIdx = EventsOn("task:result", (data: any) => {
+          try {
+              const result = typeof data === 'string' ? JSON.parse(data) : data;
+              // Ensure this result belongs to the current session
+              if (result.agent_id !== sessionId) return;
 
-    let outputEntry: ConsoleEntry;
+              setEntries(prev => [...prev, {
+                  id: Date.now().toString(),
+                  type: "output",
+                  content: result.output || result.error || "(No output)",
+                  timestamp: new Date(),
+                  level: result.error ? "error" : "success",
+                  raw: true 
+              }]);
+          } catch(e) {
+              console.error("Error parsing task result", e);
+          }
+      });
+      return () => cancelTaskIdx();
+  }, [sessionId]);
 
-    // Mock command processing
-    switch (command.toLowerCase()) {
-      case "help":
-        outputEntry = {
-          id: (Date.now() + 1).toString(),
-          type: "output",
-          content: `Available commands:
-  sessions     - List active sessions
-  listeners    - Manage listeners
-  payloads     - Generate payloads
-  pivot        - Manage pivoting
-  shell        - Execute shell command
-  upload       - Upload file to target
-  download     - Download file from target`,
-          timestamp: new Date(),
-        };
-        break;
-      case "sessions":
-        outputEntry = {
-          id: (Date.now() + 1).toString(),
-          type: "output",
-          content: `Active Sessions:
-  SESSION_001  10.0.2.15     DESKTOP-ABC123\\admin  Windows 10  [ACTIVE]
-  SESSION_002  172.16.1.50   WS-LAB01\\user         Windows 11  [ACTIVE]
-  SESSION_003  192.168.1.25  SRV-DC01\\system      Windows Server 2019  [HIGH PRIV]`,
-          timestamp: new Date(),
-          level: "success",
-        };
-        break;
-      case "pwd":
-        outputEntry = {
-          id: (Date.now() + 1).toString(),
-          type: "output",
-          content: "C:\\Users\\admin",
-          timestamp: new Date(),
-        };
-        break;
-      default:
-        if (command.startsWith("use ")) {
-          const sessionId = command.substring(4);
-          setCurrentPrompt(`${sessionId}>`);
-          outputEntry = {
-            id: (Date.now() + 1).toString(),
-            type: "system",
-            content: `[+] Interacting with ${sessionId} (10.0.2.15)`,
-            timestamp: new Date(),
-            level: "success",
-          };
-        } else {
-          outputEntry = {
-            id: (Date.now() + 1).toString(),
-            type: "output",
-            content: `Unknown command: ${command}`,
-            timestamp: new Date(),
-            level: "error",
-          };
-        }
-    }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentCommand.trim()) return;
 
-    setEntries(prev => [...prev, commandEntry, outputEntry]);
-    setCommandHistory(prev => [...prev, command]);
+    const cmdText = currentCommand;
+    setCommandHistory(prev => [...prev, cmdText]);
     setHistoryIndex(-1);
     setCurrentCommand("");
+
+    // Add visual feedback of the command entered
+    setEntries(prev => [
+      ...prev,
+      {
+        id: Date.now().toString(),
+        type: "command",
+        content: cmdText,
+        timestamp: new Date(),
+      },
+    ]);
+
+    // Parse command
+    if (cmdText === "clear" || cmdText === "cls") {
+        setEntries([]);
+        return;
+    }
+
+    const parts = cmdText.trim().split(/\s+/);
+    const command = parts[0];
+    const args = parts.slice(1);
+
+    try {
+        let serverUrl = localStorage.getItem("serverUrl");
+        const token = localStorage.getItem("token");
+        if (!serverUrl) {
+            throw new Error("Server URL not configured");
+        }
+        if (!serverUrl.includes("http")) {
+            serverUrl = `http://${serverUrl}`;
+        }
+        
+        const headers = token ? { "Authorization": `Bearer ${token}` } : {};
+        const payload = {
+            agent_id: sessionId,
+            command: command,
+            args: args
+        };
+
+        const response = await Request("POST", `${serverUrl}/tasks`, headers, JSON.stringify(payload));
+
+        if (response.statusCode === 201) {
+             const respData = JSON.parse(response.body);
+             setEntries(prev => [...prev, {
+                 id: Date.now().toString(),
+                 type: "system",
+                 content: `[+] ${respData.message || "Task queued"}`,
+                 timestamp: new Date(),
+                 level: "success"
+             }]);
+        } else {
+             setEntries(prev => [...prev, {
+                 id: Date.now().toString(),
+                 type: "system",
+                 content: `[-] Server error: ${response.statusCode}`,
+                 timestamp: new Date(),
+                 level: "error"
+             }]);
+        }
+
+    } catch (err: any) {
+         setEntries(prev => [...prev, {
+             id: Date.now().toString(),
+             type: "system",
+             content: `[-] Request failed: ${err.message}`,
+             timestamp: new Date(),
+             level: "error"
+         }]);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      const command = currentCommand.trim();
-      if (command) {
-        executeCommand(command);
-      }
-    } else if (e.key === "ArrowUp") {
+    if (e.key === "ArrowUp") {
       e.preventDefault();
       if (commandHistory.length > 0) {
         const newIndex = historyIndex === -1 
@@ -193,35 +169,42 @@ export default function CommandInterface({ sessionId }: CommandInterfaceProps) {
     }
   };
 
-  const getEntryColor = (entry: ConsoleEntry) => {
-    if (entry.type === "command") return "c2-text";
-    
-    switch (entry.level) {
-      case "success": return "c2-text-accent";
-      case "info": return "c2-text-info";
-      case "warning": return "c2-text-warning";
-      case "error": return "c2-text-error";
-      default: return "c2-text-dim";
-    }
-  };
-
   return (
-    <div className="w-full h-full c2-bg-dark p-4 font-mono text-sm flex flex-col">
+    <div className="w-full h-full c2-bg-dark p-4 font-mono text-sm flex flex-col" onClick={() => inputRef.current?.focus()}>
       <div className="flex-1 overflow-y-auto space-y-1 mb-4">
-        {entries.map((entry) => (
-          <div key={entry.id} className={`${getEntryColor(entry)}`}>
-            {entry.content.split('\n').map((line, index) => (
-              <div key={index} className={index > 0 ? "ml-4" : ""}>
-                {line}
-              </div>
-            ))}
-          </div>
-        ))}
+        {entries.map((entry) => {
+            if (entry.type === "command") {
+                return (
+                    <div key={entry.id} className="text-white">
+                        <span className="c2-text-accent font-bold mr-2">{currentPrompt} &gt;</span>
+                        <span>{entry.content}</span>
+                    </div>
+                );
+            }
+            if (entry.type === "output") {
+                return (
+                    <div key={entry.id} className="text-gray-300 ml-0 break-words whitespace-pre-wrap">
+                        {entry.content}
+                    </div>
+                );
+            }
+            // System
+            let colorClass = "c2-text-dim"; // default
+            if (entry.level === "success") colorClass = "c2-text-accent"; 
+            if (entry.level === "error") colorClass = "c2-text-error";
+            if (entry.level === "info") colorClass = "c2-text-info";
+            
+            return (
+                <div key={entry.id} className={`${colorClass} whitespace-pre-wrap`}>
+                   {entry.content}
+                </div>
+            );
+        })}
         <div ref={consoleEndRef} />
       </div>
       
       <div className="mt-auto pt-2">
-        <div className="flex items-center space-x-2 border c2-border rounded bg-white/5 px-3 py-2 focus-within:ring-1 focus-within:ring-[var(--c2-accent)] focus-within:border-transparent transition-all">
+        <form onSubmit={handleSubmit} className="flex items-center space-x-2 border c2-border rounded bg-white/5 px-3 py-2 focus-within:ring-1 focus-within:ring-[var(--c2-accent)] focus-within:border-transparent transition-all">
           <span className="c2-text-accent font-bold shrink-0 select-none flex items-center">
             {currentPrompt}
             <ChevronRight className="w-4 h-4 ml-1" />
@@ -237,7 +220,7 @@ export default function CommandInterface({ sessionId }: CommandInterfaceProps) {
             autoComplete="off"
             spellCheck="false"
           />
-        </div>
+        </form>
       </div>
     </div>
   );
