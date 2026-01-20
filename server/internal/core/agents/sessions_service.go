@@ -1,6 +1,7 @@
 package agents
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/mati-olivera/R2C2/internal/core/broadcaster"
@@ -16,6 +17,10 @@ func NewSessionsService(repo SessionsRepository) *SessionsService {
 	}
 }
 
+func (s *SessionsService) GetSession(agentId string) (*Agent, error) {
+	return s.repo.GetSession(agentId)
+}
+
 func (s *SessionsService) GetSessions() ([]Agent, error) {
 	return s.repo.GetSessions()
 }
@@ -25,20 +30,18 @@ func (s *SessionsService) SaveSession(agent Agent) error {
 }
 
 func (s *SessionsService) UpdateLastPing(agentId string, timestamp time.Time) error {
-	agents, err := s.repo.GetSessions()
+	agent, err := s.repo.GetSession(agentId)
+	if err != nil {
+		return err
+	}
+	agent.LastPing = timestamp.Format(time.RFC3339)
+
+	agentData, err := json.Marshal(agent)
 	if err != nil {
 		return err
 	}
 
-	for _, agent := range agents {
-		if agent.Id == agentId {
-			agent.LastPing = timestamp.Format(time.RFC3339)
+	broadcaster.BroadcastEvent(broadcaster.BEACON_UPDATED_EVENT, string(agentData))
 
-			broadcaster.BroadcastEvent(broadcaster.REFRESH_SESSIONS_EVENT, "")
-
-			return s.repo.SaveSession(&agent)
-		}
-	}
-
-	return nil
+	return s.repo.SaveSession(agent)
 }

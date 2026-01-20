@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -32,6 +32,14 @@ export default function NewListener({ open, onOpenChange, onCreated }: Props) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!open) {
+        setTimeout(() => {
+            document.body.style.pointerEvents = "";
+        }, 500);
+    }
+  }, [open])
 
   async function handleCreate() {
     setError(null)

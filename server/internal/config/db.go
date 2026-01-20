@@ -175,13 +175,14 @@ func (d *Database) createSessionsTable() error {
 		"status" TEXT,
 		"arch" TEXT,
 		"format" TEXT,
-		"computer" TEXT,
+		"hostname" TEXT,
 		"user" TEXT,
 		"internal_ip" TEXT,
 		"public_ip" TEXT,
 		"timestamp" INT,
 		"last_ping" DATETIME NULL,
-		"pid" INT NULL
+		"pid" INT NULL,
+		"process" TEXT NULL
 	);`
 
 	statement, err := d.db.Prepare(createTableSQL)
