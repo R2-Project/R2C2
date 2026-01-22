@@ -23,8 +23,8 @@ pub fn ls_command(args: &str) -> String {
     file_list.push(format!("Listing for path: {}\n", path_clone.display()));
 
     file_list.push(format!(
-        "{:<12} {:<12} {:<12} {}",
-        "Mode", "Type", "Size", "Name"
+        "{} {} {} {} {}",
+        "Last Modified", "Mode", "Type", "Size", "Name"
     ));
     for entry in entries {
         if let Ok(entry) = entry {
@@ -51,9 +51,11 @@ pub fn ls_command(args: &str) -> String {
 
             let name = entry.file_name().to_string_lossy().to_string();
 
+            let modified = metadata.modified().ok();
+
             file_list.push(format!(
-                "{:<12} {:<12} {:<12} {}",
-                mode_str, kind, size, name
+                "{:?} {:<12} {:<12} {:<12} {}",
+                modified, mode_str, kind, size, name
             ));
         }
     }
@@ -65,7 +67,69 @@ pub fn ls_command(args: &str) -> String {
     file_list.join("\n")
 }
 
-pub fn shell() -> Result<(), String> {
-    println!("Executing shell command...");
-    Ok(())
+pub fn pwd() -> String {
+    let cwd = std::env::current_dir().unwrap();
+    cwd.display().to_string()
+}
+
+pub fn cd(args: &str) -> String {
+    if args.is_empty() {
+        return "No directory specified.".to_string();
+    }
+
+    let input_path = std::path::Path::new(args);
+    let new_path = if input_path.is_absolute() {
+        input_path.to_path_buf()
+    } else {
+        let cwd = std::env::current_dir().unwrap();
+        cwd.join(input_path)
+    };
+
+    match std::env::set_current_dir(&new_path) {
+        Ok(_) => format!("Changed directory to {}", new_path.display()),
+        Err(e) => format!("Failed to change directory: {}", e),
+    }
+}
+
+pub fn shell(args: &str) -> String {
+    #[cfg(target_os = "windows")]
+    let (shell, flag) = ("cmd", "/C");
+
+    #[cfg(not(target_os = "windows"))]
+    let (shell, flag) = ("sh", "-c");
+
+    let output = std::process::Command::new(shell)
+        .args([flag, args])
+        .current_dir(std::env::current_dir().unwrap())
+        .output()
+        .ok();
+
+    let stdout = String::from_utf8_lossy(&output.clone().unwrap().stdout).to_string();
+    let stderr = String::from_utf8_lossy(&output.clone().unwrap().stderr).to_string();
+
+    // TODO: maybe should return both
+    if stderr.is_empty() {
+        stdout
+    } else {
+        stderr
+    }
+}
+
+pub fn whoami() -> String {
+    #[cfg(target_os = "windows")]
+    {
+        std::process::Command::new("whoami")
+            .arg("/all")
+            .output()
+            .map(|output| String::from_utf8_lossy(&output.stdout).to_string())
+            .unwrap_or_else(|e| format!("Failed to execute whoami: {}", e))
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        std::process::Command::new("whoami")
+            .output()
+            .map(|output| String::from_utf8_lossy(&output.stdout).to_string())
+            .unwrap_or_else(|e| format!("Failed to execute whoami: {}", e))
+    }
 }

@@ -17,9 +17,16 @@ type CommandDefinition struct {
 var CommandsRegistry = []CommandDefinition{
 	{
 		Name:        "shell",
-		Description: "Opens an interactive shell session",
-		Usage:       "shell",
-		Platforms:   nil,
+		Description: "Executes cmd.exe command",
+		Usage:       "shell <command>",
+		Args: []CommandArg{
+			{
+				Name:     "command",
+				Required: true,
+				Desc:     "The command to execute",
+			},
+		},
+		Platforms: nil,
 	},
 	{
 		Name:        "ls",
@@ -29,14 +36,34 @@ var CommandsRegistry = []CommandDefinition{
 			{
 				Name:     "path",
 				Required: false,
-				Desc:     "Path to list files from",
 			},
 		},
-		Platforms: nil,
 	},
 	{
-		Name:        "exit",
-		Description: "Kill the agent process",
-		Usage:       "exit",
+		Name:        "pwd",
+		Description: "Print the current working directory",
+		Usage:       "pwd",
+	},
+	{
+		Name:        "cd",
+		Description: "Change the current working directory",
+		Usage:       "cd <path>",
+		Args: []CommandArg{
+			{
+				Name:     "path",
+				Required: true,
+				Desc:     "Path to change directory to",
+			},
+		},
+	},
+	{
+		Name:        "whoami",
+		Description: "Display the current user",
+		Usage:       "whoami",
+	},
+	{
+		Name:        "sleep",
+		Description: "Sets the sleep and jitter time in seconds time",
+		Usage:       "sleep <seconds> <jitter>",
 	},
 }
