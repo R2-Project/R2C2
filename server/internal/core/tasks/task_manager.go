@@ -73,7 +73,6 @@ func (tm *TaskManager) FetchTasks(agentId string) (*[]Task, error) {
 
 func (tm *TaskManager) SubmitTaskResult(task TaskResult) error {
 
-	fmt.Printf("Received result for task %v\n", task)
 	taskData := Task{
 		Id:     task.Task.Id,
 		Status: TaskStatusCompleted,

