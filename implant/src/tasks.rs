@@ -48,11 +48,10 @@ impl TasksManager {
             println!("Dispatching task: {:?}", task);
             match task.command.as_str() {
                 "ls" => {
-                    let result = commands::ls_command();
-                    println!("ls_command result: {:?}", result);
+                    let result = commands::ls_command(&task.args.join(" "));
                     let task_result = TaskResult {
                         task: task.clone(),
-                        output: format!("{:?}", result),
+                        output: result,
                     };
                     self.completed_tasks.push(task_result);
                 }
