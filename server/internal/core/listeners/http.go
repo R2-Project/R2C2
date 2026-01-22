@@ -2,7 +2,6 @@ package listeners
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 	"strconv"
 	"strings"
@@ -141,7 +140,7 @@ func (h *HttpListener) handleRequest(ctx *gin.Context) {
 
 	if ctx.Request.Method == http.MethodPost {
 		var registerData agents.AgentRegisterData
-		err := ctx.BindJSON(&registerData)
+		err := ctx.ShouldBindBodyWithJSON(&registerData)
 		if err == nil {
 			// handle registration
 			agent, err := h.Sessions.GetSession(agentId)
@@ -179,12 +178,12 @@ func (h *HttpListener) handleRequest(ctx *gin.Context) {
 				return
 			}
 		}
-		// FIXME: body data is failing
 
 		// submitting task results
 		var result tasks.TaskResult
-		if err := json.NewDecoder(ctx.Request.Body).Decode(&result); err != nil {
-			logger.Error("Error decoding task result", err)
+		if err := ctx.ShouldBindBodyWithJSON(&result); err != nil {
+			logger.Error("Error binding task result JSON from agent "+agentId, err)
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid task result data"})
 			return
 		}
 
