@@ -132,7 +132,10 @@ export default function CommandInterface({ sessionId }: CommandInterfaceProps) {
           try {
               const result = typeof data === 'string' ? JSON.parse(data) : data;
               // Ensure this result belongs to the current session
-              if (result.agent_id !== sessionId) return;
+              // Structure: { task: { agent_id: ... }, output: ... }
+              const agentId = result.task?.agent_id || result.agent_id;
+              
+              if (agentId !== sessionId) return;
 
               setEntries(prev => [...prev, {
                   id: Date.now().toString(),

@@ -91,8 +91,10 @@ async fn main() {
             }
         }
 
+        // post completed tasks
         while !task_manager.completed_tasks.is_empty() {
             let task_result = task_manager.completed_tasks.remove(0);
+            println!("Posting task result: {:?}\n", task_result);
             match client.post_data(&beacon, &task_result).await {
                 Ok(_) => {
                     println!("Posted task result successfully.");
