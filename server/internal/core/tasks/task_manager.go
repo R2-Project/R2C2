@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/mati-olivera/R2C2/internal/core/broadcaster"
@@ -18,7 +19,30 @@ func CreateTaskManager(taskRepository TaskRepository) *TaskManager {
 	}
 }
 
-func (tm *TaskManager) Queue(agentId string, command string, args []string) error {
+func (tm *TaskManager) Queue(agentId string, command string, args []string) (*TaskQueueResult, error) {
+
+	result := &TaskQueueResult{}
+
+	if command == "" {
+		logger.Error("error queueing task", ErrNoCommand)
+		return nil, ErrNoCommand
+	}
+
+	if command == "help" {
+		result.Commands = &CommandsRegistry
+		return result, nil
+	}
+
+	cmdNotFound := true
+	for _, cmd := range CommandsRegistry {
+		if cmd.Name == command {
+			cmdNotFound = false
+			break
+		}
+	}
+	if cmdNotFound {
+		return nil, ErrCommandNotFound
+	}
 
 	task := &Task{
 		AgentId:   agentId,
@@ -29,19 +53,14 @@ func (tm *TaskManager) Queue(agentId string, command string, args []string) erro
 	}
 	task.GenerateId()
 
-	if task.Command == "" {
-		logger.Error("error queueing task", ErrNoCommand, "task_id", task.GetId())
-		return ErrNoCommand
-	}
-
-	logger.Info("task queued", "task_id", task.GetId())
-
 	err := tm.TaskRepository.SaveTask(task)
 	if err != nil {
 		logger.Error("error saving task to repository", err, "task_id", task.GetId())
-		return err
+		return nil, err
 	}
-	return nil
+	result.Message = fmt.Sprintf("Task %s queued with id %s", task.Command, task.GetId())
+
+	return result, nil
 }
 
 func (tm *TaskManager) FetchTasks(agentId string) (*[]Task, error) {
@@ -54,17 +73,15 @@ func (tm *TaskManager) FetchTasks(agentId string) (*[]Task, error) {
 
 func (tm *TaskManager) SubmitTaskResult(task TaskResult) error {
 
+	fmt.Printf("Received result for task %v\n", task)
 	taskData := Task{
-		Id:     task.TaskId,
+		Id:     task.Task.Id,
 		Status: TaskStatusCompleted,
 	}
 	err := tm.TaskRepository.UpdateTask(&taskData)
 	if err != nil {
 		return err
 	}
-
-	// TODO: broadcast task result
-	// add operator issuer?
 
 	taskResult, err := json.Marshal(task)
 	if err != nil {

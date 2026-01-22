@@ -168,11 +168,18 @@ func StartServer(port int) error {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 			return
 		}
-		err := taskManager.Queue(taskData.AgentId, taskData.Command, taskData.Args)
+
+		result, err := taskManager.Queue(taskData.AgentId, taskData.Command, taskData.Args)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
+
+		if result != nil {
+			c.JSON(http.StatusOK, result)
+			return
+		}
+
 		c.JSON(http.StatusCreated, gin.H{"message": "Task queued"})
 		return
 	})

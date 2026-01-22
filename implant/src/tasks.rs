@@ -1,8 +1,9 @@
 use crate::commands;
 use serde::Deserialize;
+use serde::Serialize;
 use std::collections::VecDeque;
 
-#[derive(Debug, Deserialize)] // Add Debug to allow printing with {:?}
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Task {
     pub id: String,
     pub agent_id: String,
@@ -12,11 +13,25 @@ pub struct Task {
     pub timestamp: String,
 }
 
-pub struct Tasks {
-    tasks: VecDeque<Task>,
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TaskResult {
+    pub task: Task,
+    pub output: String,
 }
 
-impl Tasks {
+pub struct TasksManager {
+    tasks: VecDeque<Task>,
+    pub completed_tasks: Vec<TaskResult>,
+}
+
+impl TasksManager {
+    pub fn new() -> Self {
+        TasksManager {
+            tasks: VecDeque::new(),
+            completed_tasks: Vec::new(),
+        }
+    }
+
     pub fn queue(&mut self, task: Task) -> Result<(), String> {
         println!("Queueing task: {:?}", task); // Debug print
         self.tasks.push_back(task);
@@ -24,17 +39,37 @@ impl Tasks {
         Ok(())
     }
 
-    fn dispatch(&mut self) -> Result<(), String> {
+    pub fn dispatch(&mut self) -> Result<(), String> {
         if self.tasks.is_empty() {
-            return Err("No tasks available".into());
+            return Ok(println!("No tasks to dispatch."));
         }
 
-        let task = self.tasks.pop_front().ok_or("No tasks available")?;
-
-        let _ = match task.command.as_str() {
-            "ls" => commands::ls_command(),
-            _ => return Err(format!("Unknown command: {}", task.command)),
-        };
+        while let Some(task) = self.tasks.pop_front() {
+            println!("Dispatching task: {:?}", task);
+            match task.command.as_str() {
+                "ls" => {
+                    let result = commands::ls_command();
+                    println!("ls_command result: {:?}", result);
+                    let task_result = TaskResult {
+                        task: task.clone(),
+                        output: format!("{:?}", result),
+                    };
+                    self.completed_tasks.push(task_result);
+                }
+                "shell" => {
+                    let result = commands::shell();
+                    println!("shell command result: {:?}", result);
+                    let task_result = TaskResult {
+                        task: task.clone(),
+                        output: format!("{:?}", result),
+                    };
+                    self.completed_tasks.push(task_result);
+                }
+                _ => {
+                    println!("Unknown command: {}", task.command);
+                }
+            };
+        }
         Ok(())
     }
 }
@@ -45,8 +80,9 @@ mod tests {
 
     #[test]
     fn test_queue_task() {
-        let mut tasks = Tasks {
+        let mut tasks = TasksManager {
             tasks: VecDeque::new(),
+            completed_tasks: vec![],
         };
 
         let task = Task {
