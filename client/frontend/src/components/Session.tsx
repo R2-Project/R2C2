@@ -16,7 +16,7 @@ interface SessionProps {
 interface SessionData {
     id: string;
     user: string;
-    computer: string;
+    hostname: string;
     public_ip: string;
     internal_ip: string;
     arch: string;
@@ -116,7 +116,7 @@ export default function Session({ sessionId = "SESSION_001", onClose }: SessionP
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-2">
             <div className={`w-2 h-2 rounded-full ${sessionData.status === 'active' ? 'bg-green-500 animate-pulse' : 'bg-gray-500'}`} />
-            <span className="font-bold c2-text-accent">{sessionData.id} | {sessionData.user}@{sessionData.computer}</span>
+            <span className="font-bold c2-text-accent">{sessionData.id} | {sessionData.user}@{sessionData.hostname}</span>
           </div>
           <div className="h-4 w-px c2-bg-border" />
           <div className="text-xs c2-text-dim space-x-3 flex">
@@ -127,20 +127,6 @@ export default function Session({ sessionId = "SESSION_001", onClose }: SessionP
           </div>
         </div>
         
-        <div className="flex items-center space-x-2">
-          <button className="p-1 hover:bg-white/10 rounded c2-text-dim hover:c2-text">
-            <Minimize2 size={14} />
-          </button>
-          <button className="p-1 hover:bg-white/10 rounded c2-text-dim hover:c2-text">
-            <Maximize2 size={14} />
-          </button>
-          <button 
-            onClick={onClose}
-            className="p-1 hover:bg-red-900/20 rounded c2-text-error hover:text-red-400"
-          >
-            <X size={14} />
-          </button>
-        </div>
       </div>
 
       {/* Main Content Area */}

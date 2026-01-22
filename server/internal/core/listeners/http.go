@@ -179,6 +179,7 @@ func (h *HttpListener) handleRequest(ctx *gin.Context) {
 				return
 			}
 		}
+		// FIXME: body data is failing
 
 		// submitting task results
 		var result tasks.TaskResult
@@ -190,7 +191,7 @@ func (h *HttpListener) handleRequest(ctx *gin.Context) {
 		// FIXME: see if we can merge this two
 		err = h.TaskManager.SubmitTaskResult(result)
 		if err != nil {
-			logger.Error("error updating task status", err, "task_id", result.TaskId)
+			logger.Error("error updating task status", err, "task_id", result.Task.Id)
 		}
 		err = h.Sessions.UpdateLastPing(agentId, time.Now())
 		if err != nil {
@@ -219,7 +220,7 @@ func (h *HttpListener) handleRequest(ctx *gin.Context) {
 			return
 		}
 
-		ctx.JSON(http.StatusOK, gin.H{"tasks": tasks})
+		ctx.JSON(http.StatusOK, tasks)
 		return
 	}
 }

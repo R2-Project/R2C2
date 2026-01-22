@@ -6,7 +6,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import R2C2Icon from '@/assets/images/r2c2-1.jpeg'
+import R2C2Icon from '@/assets/images/r2c2-4.png'
 
 export type ShortcutItem = {
   id: string
@@ -141,9 +141,9 @@ export default function ShortcutsBar({ items, className, onAddView, activeCompon
                   <button
                     onClick={() => onAddView?.('chatbot', 'R2C2', 'bottomTabset')}
                     aria-label="R2C2 Chatbot"
-                    className={`relative flex items-center justify-center w-14 h-14 rounded-full transition-transform duration-200 shadow-lg mr-4 ${
+                    className={`relative flex items-center justify-center w-24 h-24 -my-2 transition-transform duration-200 mr-4 z-10 ${
                       activeComponents.includes('chatbot') 
-                        ? "ring-4 ring-primary scale-110" 
+                        ? "scale-110 drop-shadow-lg" 
                         : "hover:scale-110"
                     }`}
                     type="button"
@@ -151,7 +151,7 @@ export default function ShortcutsBar({ items, className, onAddView, activeCompon
                     <img
                       src={R2C2Icon}
                       alt="R2C2"
-                      className="w-14 h-14 rounded-full border-2 border-border"
+                      className="w-full h-full object-contain"
                     />
                   </button>
                 </TooltipTrigger>

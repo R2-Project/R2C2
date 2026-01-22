@@ -62,24 +62,44 @@ async fn main() {
     }
 
     loop {
-        // Receive tasks/response
+        // fetch tasks
+        let mut task_manager = tasks::TasksManager::new();
         match client.fetch_tasks(&beacon).await {
             Ok(tasks_data) => {
                 if !tasks_data.is_empty() {
                     print!("Received tasks: {:?}\n", tasks_data);
-                    // for task in tasks_data.iter() {
-                    //     let mut tasks = tasks {
-                    //         tasks: std::collections::vecdeque::new(),
-                    //     };
-                    //     if let err(e) = tasks.queue(task.clone()) {
-                    //         eprintln!("failed to queue task {}: {}", task.id, e);
-                    //         continue;
-                    //     }
-                    // }
+                    for task in tasks_data.iter() {
+                        if let Err(e) = task_manager.queue(task.clone()) {
+                            eprintln!("Failed to queue task: {}", e);
+                            continue;
+                        }
+                    }
                 }
             }
             Err(e) => {
                 eprintln!("Failed to receive data: {}", e);
+            }
+        }
+
+        // dispatch tasks
+        match task_manager.dispatch() {
+            Ok(_) => {
+                println!("Dispatched tasks successfully.");
+            }
+            Err(e) => {
+                eprintln!("Failed to dispatch tasks: {}", e);
+            }
+        }
+
+        while !task_manager.completed_tasks.is_empty() {
+            let task_result = task_manager.completed_tasks.remove(0);
+            match client.post_data(&beacon, &task_result).await {
+                Ok(_) => {
+                    println!("Posted task result successfully.");
+                }
+                Err(e) => {
+                    eprintln!("Failed to post task result: {}", e);
+                }
             }
         }
 
