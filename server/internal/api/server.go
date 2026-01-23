@@ -52,7 +52,7 @@ func StartServer(port int) error {
 		logger.Error("Failed to initialize AI provider", err)
 		return err
 	}
-	aiService := ai.NewAIService(provider, *listenersService)
+	aiService := ai.NewAIService(provider, *listenersService, *taskManager, *sessionsService)
 
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},

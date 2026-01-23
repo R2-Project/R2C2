@@ -103,7 +103,7 @@ export default function Component({ onOpenSession }: SessionsProps) {
       
       const sleepMs = (session.sleep || 0) * 1000;
       const jitterMs = sleepMs * ((session.jitter || 0) / 100);
-      const maxDelay = sleepMs + jitterMs;
+      const maxDelay = (sleepMs + jitterMs) + sleepMs; // Add extra cycle grace period
       
       if (diffMs <= maxDelay) {
           return "active";

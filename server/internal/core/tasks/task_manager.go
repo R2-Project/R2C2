@@ -99,3 +99,7 @@ func (tm *TaskManager) GetQueuedTasks() (*[]Task, error) {
 	}
 	return tasks, nil
 }
+
+func (tm *TaskManager) GetAvailableCommands() *[]CommandDefinition {
+	return &CommandsRegistry
+}

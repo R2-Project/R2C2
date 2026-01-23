@@ -264,11 +264,28 @@ export default function C2Dashboard() {
             return;
         }
 
-        const title = navData.title || (componentName.charAt(0).toUpperCase() + componentName.slice(1));
+        let config = navData.config || {};
+        let displayTitle = navData.title;
+
+        // Handle session navigation specific parameters
+        if (componentName === 'session' && navData.agent_id) {
+             config.sessionId = navData.agent_id;
+             if (!displayTitle) {
+                 displayTitle = `Session ${navData.agent_id.substring(0,8)}...`;
+             }
+        }
+
+        const title = displayTitle || (componentName.charAt(0).toUpperCase() + componentName.slice(1));
         const target = navData.target || 'bottomTabset';
-        const config = navData.config;
 
         onAddView(componentName, title, target, config);
+        
+        // Refresh component if needed
+        if (componentName === 'listeners') {
+            window.dispatchEvent(new CustomEvent('refresh-listeners'));
+        } else if (componentName === 'sessions' || componentName === 'networkMap') {
+            window.dispatchEvent(new CustomEvent('refresh-sessions'));
+        }
       } catch (e) {
         console.error("Error processing navigation event:", e);
       }
