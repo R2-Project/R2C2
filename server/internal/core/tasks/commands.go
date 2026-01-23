@@ -66,4 +66,9 @@ var CommandsRegistry = []CommandDefinition{
 		Description: "Sets the sleep and jitter time in seconds time",
 		Usage:       "sleep <seconds> <jitter>",
 	},
+	{
+		Name:        "ps",
+		Description: "List running processes",
+		Usage:       "ps",
+	},
 }

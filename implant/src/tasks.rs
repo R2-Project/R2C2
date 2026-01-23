@@ -48,6 +48,14 @@ impl TasksManager {
         while let Some(task) = self.tasks.pop_front() {
             println!("Dispatching task: {:?}", task);
             match task.command.as_str() {
+                "ps" => {
+                    let result = commands::ps();
+                    let task_result = TaskResult {
+                        task: task.clone(),
+                        output: result,
+                    };
+                    self.completed_tasks.push(task_result);
+                }
                 "ls" => {
                     let result = commands::ls_command(&task.args.join(" "));
                     let task_result = TaskResult {

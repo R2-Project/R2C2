@@ -1,4 +1,5 @@
 use std::fs;
+use sysinfo::{Pid, PidExt, ProcessExt, System, SystemExt, UserExt};
 
 pub fn ls_command(args: &str) -> String {
     let cwd = std::env::current_dir().unwrap();
@@ -131,5 +132,40 @@ pub fn whoami() -> String {
             .output()
             .map(|output| String::from_utf8_lossy(&output.stdout).to_string())
             .unwrap_or_else(|e| format!("Failed to execute whoami: {}", e))
+    }
+}
+
+pub fn ps() -> String {
+    let mut sys = System::new_all();
+
+    sys.refresh_all();
+    std::thread::sleep(std::time::Duration::from_millis(100));
+    sys.refresh_processes(sysinfo::ProcessesToUpdate::All, true);
+
+    let mut ps_list = Vec::new();
+
+    ps_list.push(format!(
+        "{:<8} {:<30} {:<15} {:<10}",
+        "PID", "NAME", "MEM (MB)", "CPU (%)",
+    ));
+    ps_list.push(format!("{}", "-".repeat(65)));
+
+    for (pid, process) in sys.processes() {
+        ps_list.push(format!(
+            "{:<8} {:<30} {:<15.2} {:<10.2}",
+            pid,
+            truncate(process.name().to_str().expect("unknown"), 30),
+            process.memory() as f64 / 1024.0 / 1024.0, // bytes to MB
+            process.cpu_usage()
+        ));
+    }
+
+    ps_list.join("\n")
+}
+
+fn truncate(s: &str, max_chars: usize) -> &str {
+    match s.char_indices().nth(max_chars) {
+        None => s,
+        Some((idx, _)) => &s[..idx],
     }
 }
