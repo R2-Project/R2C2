@@ -17,7 +17,7 @@ func InitSessionsRepository(db *sql.DB) *SessionsRepository {
 }
 
 func (r *SessionsRepository) GetSessions() ([]agents.Agent, error) {
-	rows, err := r.db.Query("SELECT id, listener, status, arch, format, timestamp, last_ping, hostname, user, internal_ip, public_ip, pid, process FROM sessions")
+	rows, err := r.db.Query("SELECT id, listener, status, arch, format, timestamp, last_ping, hostname, user, internal_ip, public_ip, pid, process, sleep, jitter FROM sessions")
 	if err != nil {
 		return nil, err
 	}
@@ -26,7 +26,7 @@ func (r *SessionsRepository) GetSessions() ([]agents.Agent, error) {
 	var sessions []agents.Agent
 	for rows.Next() {
 		var agent agents.Agent
-		if err := rows.Scan(&agent.Id, &agent.Listener, &agent.Status, &agent.Arch, &agent.Format, &agent.Timestamp, &agent.LastPing, &agent.Hostname, &agent.User, &agent.InternalIp, &agent.PublicIp, &agent.Pid, &agent.ProcessName); err != nil {
+		if err := rows.Scan(&agent.Id, &agent.Listener, &agent.Status, &agent.Arch, &agent.Format, &agent.Timestamp, &agent.LastPing, &agent.Hostname, &agent.User, &agent.InternalIp, &agent.PublicIp, &agent.Pid, &agent.ProcessName, &agent.Sleep, &agent.Jitter); err != nil {
 			return nil, err
 		}
 		sessions = append(sessions, agent)
@@ -36,8 +36,8 @@ func (r *SessionsRepository) GetSessions() ([]agents.Agent, error) {
 
 func (r *SessionsRepository) SaveSession(agent *agents.Agent) error {
 	_, err := r.db.Exec(`
-		INSERT INTO sessions (id, listener, status, arch, format, timestamp, last_ping, hostname, user, internal_ip, public_ip, pid, process)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		INSERT INTO sessions (id, listener, status, arch, format, timestamp, last_ping, hostname, user, internal_ip, public_ip, pid, process, sleep, jitter)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT(id) DO UPDATE SET
 			listener=excluded.listener,
 			status=excluded.status,
@@ -50,16 +50,18 @@ func (r *SessionsRepository) SaveSession(agent *agents.Agent) error {
 			internal_ip=excluded.internal_ip,
 			public_ip=excluded.public_ip,
 			pid=excluded.pid,
-			process=excluded.process
-	`, agent.Id, agent.Listener, agent.Status, agent.Arch, agent.Format, agent.Timestamp, agent.LastPing, agent.Hostname, agent.User, agent.InternalIp, agent.PublicIp, agent.Pid, agent.ProcessName)
+			process=excluded.process,
+			sleep=excluded.sleep,
+			jitter=excluded.jitter
+	`, agent.Id, agent.Listener, agent.Status, agent.Arch, agent.Format, agent.Timestamp, agent.LastPing, agent.Hostname, agent.User, agent.InternalIp, agent.PublicIp, agent.Pid, agent.ProcessName, agent.Sleep, agent.Jitter)
 	return err
 }
 
 func (r *SessionsRepository) GetSession(agentId string) (*agents.Agent, error) {
-	row := r.db.QueryRow("SELECT id, listener, status, arch, format, timestamp, last_ping, hostname, user, internal_ip, public_ip, pid, process FROM sessions WHERE id = ?", agentId)
+	row := r.db.QueryRow("SELECT id, listener, status, arch, format, timestamp, last_ping, hostname, user, internal_ip, public_ip, pid, process, sleep, jitter FROM sessions WHERE id = ?", agentId)
 
 	var agent agents.Agent
-	if err := row.Scan(&agent.Id, &agent.Listener, &agent.Status, &agent.Arch, &agent.Format, &agent.Timestamp, &agent.LastPing, &agent.Hostname, &agent.User, &agent.InternalIp, &agent.PublicIp, &agent.Pid, &agent.ProcessName); err != nil {
+	if err := row.Scan(&agent.Id, &agent.Listener, &agent.Status, &agent.Arch, &agent.Format, &agent.Timestamp, &agent.LastPing, &agent.Hostname, &agent.User, &agent.InternalIp, &agent.PublicIp, &agent.Pid, &agent.ProcessName, &agent.Sleep, &agent.Jitter); err != nil {
 		return nil, err
 	}
 	return &agent, nil

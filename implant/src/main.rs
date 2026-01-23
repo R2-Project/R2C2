@@ -48,6 +48,8 @@ struct RegisterData {
     ip: String,
     pid: u32, // 1024
     process_name: String,
+    sleep: u64,
+    jitter: u64,
 }
 
 #[tokio::main]
@@ -157,5 +159,7 @@ fn get_register_data() -> RegisterData {
         pid,
         process_name,
         ip: ip.to_string(),
+        sleep: 5,
+        jitter: 2,
     }
 }

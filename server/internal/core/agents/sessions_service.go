@@ -45,3 +45,14 @@ func (s *SessionsService) UpdateLastPing(agentId string, timestamp time.Time) er
 
 	return s.repo.SaveSession(agent)
 }
+
+func (s *SessionsService) UpdateSleep(agentId string, sleep int, jitter int) error {
+	agent, err := s.repo.GetSession(agentId)
+	if err != nil {
+		return err
+	}
+	agent.Sleep = sleep
+	agent.Jitter = jitter
+
+	return s.repo.SaveSession(agent)
+}

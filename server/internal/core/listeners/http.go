@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	"github.com/mati-olivera/R2C2/internal/core/agents"
 	"github.com/mati-olivera/R2C2/internal/core/logger"
 	"github.com/mati-olivera/R2C2/internal/core/tasks"
@@ -140,7 +141,7 @@ func (h *HttpListener) handleRequest(ctx *gin.Context) {
 
 	if ctx.Request.Method == http.MethodPost {
 		var registerData agents.AgentRegisterData
-		err := ctx.ShouldBindBodyWithJSON(&registerData)
+		err := ctx.ShouldBindBodyWith(&registerData, binding.JSON)
 		if err == nil {
 			// handle registration
 			agent, err := h.Sessions.GetSession(agentId)
@@ -160,6 +161,8 @@ func (h *HttpListener) handleRequest(ctx *gin.Context) {
 				agent.Pid = registerData.Pid
 				agent.ProcessName = registerData.ProcessName
 				agent.PublicIp = externalIp
+				agent.Sleep = registerData.Sleep
+				agent.Jitter = registerData.Jitter
 
 				err := h.Sessions.SaveSession(*agent)
 				if err != nil {
@@ -181,10 +184,41 @@ func (h *HttpListener) handleRequest(ctx *gin.Context) {
 
 		// submitting task results
 		var result tasks.TaskResult
-		if err := ctx.ShouldBindBodyWithJSON(&result); err != nil {
-			logger.Error("Error binding task result JSON from agent "+agentId, err)
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid task result data"})
+		err = ctx.ShouldBindBodyWith(&result, binding.JSON)
+		if err != nil {
+			logger.Error("Error binding task result JSON", err)
 			return
+		}
+
+		// if err := json.NewDecoder(ctx.Request.Body).Decode(&result); err != nil {
+		// 	logger.Error("Error decoding task result", err)
+		// 	return
+		// }
+
+		if result.Task.Command == "sleep" {
+			sleep := result.Task.Args[0]
+			jitter := result.Task.Args[1]
+
+			if sleep == "" || jitter == "" {
+				logger.Error("Missing sleep or jitter value from agent "+agentId, nil)
+				return
+			}
+			sleepInt, err := strconv.Atoi(sleep)
+			if err != nil {
+				logger.Error("Invalid sleep value from agent "+agentId, err)
+				return
+			}
+			jitterInt, err := strconv.Atoi(jitter)
+			if err != nil {
+				logger.Error("Invalid jitter value from agent "+agentId, err)
+				return
+			}
+
+			err = h.Sessions.UpdateSleep(agentId, sleepInt, jitterInt)
+			if err != nil {
+				logger.Error("Error updating sleep/jitter for agent "+agentId, err)
+				return
+			}
 		}
 
 		// FIXME: see if we can merge this two

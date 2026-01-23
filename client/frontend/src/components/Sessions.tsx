@@ -18,6 +18,8 @@ interface Session {
   public_ip: string
   process: string
   pid: number
+  sleep: number
+  jitter: number
 }
 
 interface SessionsProps {
@@ -57,10 +59,10 @@ export default function Component({ onOpenSession }: SessionsProps) {
         }
     });
 
-    // Update 'now' every 2000ms to refresh last ping timers
+    // Update 'now' every 1000ms to refresh last ping timers and status
     const interval = setInterval(() => {
       setNow(Date.now())
-    }, 2000)
+    }, 1000)
 
     return () => {
       window.removeEventListener("refresh-sessions", handleRefresh)
@@ -89,6 +91,24 @@ export default function Component({ onOpenSession }: SessionsProps) {
     }
 
     return `${diff}ms`
+  }
+
+  function getSessionStatus(session: Session) {
+      if (!session.last_ping || session.last_ping.startsWith("0001-01-01")) {
+          return "inactive";
+      }
+
+      const lastPingTime = new Date(session.last_ping).getTime();
+      const diffMs = now - lastPingTime;
+      
+      const sleepMs = (session.sleep || 0) * 1000;
+      const jitterMs = sleepMs * ((session.jitter || 0) / 100);
+      const maxDelay = sleepMs + jitterMs;
+      
+      if (diffMs <= maxDelay) {
+          return "active";
+      }
+      return "unhealthy";
   }
 
   async function fetchSessions() {
@@ -134,6 +154,7 @@ export default function Component({ onOpenSession }: SessionsProps) {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>Status</TableHead>
               <TableHead>Session ID</TableHead>
               <TableHead>External</TableHead>
               <TableHead>Internal</TableHead>
@@ -147,12 +168,25 @@ export default function Component({ onOpenSession }: SessionsProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sessions.map((item) => (
+            {sessions.map((item) => {
+                const calculatedStatus = getSessionStatus(item);
+                return (
               <TableRow 
                 key={item.id} 
                 className="cursor-pointer hover:bg-muted/50"
                 onClick={() => onOpenSession?.(item.id)}
               >
+                <TableCell>
+                    {calculatedStatus === "active" && (
+                        <Badge variant="outline" className="text-green-500 border-green-500">Active</Badge>
+                    )}
+                    {calculatedStatus === "unhealthy" && (
+                        <Badge variant="outline" className="text-red-500 border-red-500">Unhealthy</Badge>
+                    )}
+                    {calculatedStatus === "inactive" && (
+                         <Badge variant="outline" className="text-gray-500 border-gray-500">Inactive</Badge>
+                    )}
+                </TableCell>
                 <TableCell className="font-mono text-green-500">{item.id}</TableCell>
                 <TableCell>{item.public_ip || "-"}</TableCell>
                 <TableCell>{item.internal_ip || "-"}</TableCell>
@@ -168,7 +202,7 @@ export default function Component({ onOpenSession }: SessionsProps) {
                   </span>
                 </TableCell>
               </TableRow>
-            ))}
+            )})}
             {sessions.length === 0 && !loading && (
               <TableRow>
                 <TableCell colSpan={10} className="text-center text-muted-foreground h-24">

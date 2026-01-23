@@ -182,7 +182,9 @@ func (d *Database) createSessionsTable() error {
 		"timestamp" INT,
 		"last_ping" DATETIME NULL,
 		"pid" INT NULL,
-		"process" TEXT NULL
+		"process" TEXT NULL,
+		"sleep" INT NULL,
+		"jitter" INT NULL
 	);`
 
 	statement, err := d.db.Prepare(createTableSQL)
