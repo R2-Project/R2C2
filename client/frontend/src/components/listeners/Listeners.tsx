@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/context-menu"
 // import { getListeners, Listener } from "@/services/listeners"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import NewListener from "./NewListener"
 import NewAgent from "../agents/NewAgent"
 import { Request } from '../../../wailsjs/go/main/App';
@@ -82,6 +83,15 @@ export default function Listeners({ onAddView }: Props) {
 
   useEffect(() => {
     load()
+    
+    const handleRefresh = () => {
+        load();
+    };
+    window.addEventListener("refresh-listeners", handleRefresh);
+    
+    return () => {
+        window.removeEventListener("refresh-listeners", handleRefresh);
+    }
   }, [])
 
   const renderContent = () => {
@@ -128,7 +138,13 @@ export default function Listeners({ onAddView }: Props) {
                 <TableCell>{(item.host ?? "—").toString()}</TableCell>
                 <TableCell>{(item.port ?? "—").toString()}</TableCell>
                 <TableCell>{(item.uris ? item.uris.join(", ") : "—").toString()}</TableCell>
-                <TableCell>{(item.status ?? "—").toString()}</TableCell>
+                <TableCell>
+                  {item.status === 'running' ? (
+                     <Badge variant="outline" className="text-green-500 border-green-500">Running</Badge>
+                  ) : (
+                     <Badge variant="outline" className="text-gray-500 border-gray-500">{item.status || "Stopped"}</Badge>
+                   )}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

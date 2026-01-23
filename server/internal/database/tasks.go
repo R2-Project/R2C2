@@ -67,6 +67,7 @@ func (r *TasksRepository) GetPendingTasks(agentId string) (*[]tasks.Task, error)
 	var result []tasks.Task
 	for rows.Next() {
 		var task tasks.Task
+		task.Args = []string{}
 		var argsJson []byte
 		if err := rows.Scan(&task.Id, &task.AgentId, &task.Command, &argsJson, &task.Status, &task.Timestamp); err != nil {
 			return nil, err
@@ -75,6 +76,9 @@ func (r *TasksRepository) GetPendingTasks(agentId string) (*[]tasks.Task, error)
 			if err := json.Unmarshal(argsJson, &task.Args); err != nil {
 				return nil, err
 			}
+		}
+		if task.Args == nil {
+			task.Args = []string{}
 		}
 		result = append(result, task)
 	}

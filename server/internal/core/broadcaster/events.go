@@ -5,5 +5,6 @@ const TASK_RESULT_EVENT = "task:result"
 const BEACON_UPDATED_EVENT = "agent:beacon_updated"
 
 type UINavigateEvent struct {
-	View string `json:"view"`
+	View    string `json:"view"`
+	AgentId string `json:"agent_id,omitempty"`
 }

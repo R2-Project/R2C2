@@ -217,10 +217,17 @@ export default function NetworkMap({ onAddView, onOpenSession }: NetworkMapProps
   useEffect(() => {
       fetchSessions();
       
+      // Listen for window refresh events
+      const handleRefresh = () => fetchSessions();
+      window.addEventListener("refresh-sessions", handleRefresh);
+
       const cancel = EventsOn("agent:beacon_updated", () => {
           fetchSessions();
       });
-      return () => cancel();
+      return () => {
+          cancel();
+          window.removeEventListener("refresh-sessions", handleRefresh);
+      };
   }, []);
 
   const onNodesChange = useCallback(
