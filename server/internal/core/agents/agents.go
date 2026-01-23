@@ -19,6 +19,8 @@ type Agent struct {
 	PublicIp    string `json:"public_ip"`
 	Pid         int64  `json:"pid,omitempty"`
 	ProcessName string `json:"process"`
+	Sleep       int    `json:"sleep"`
+	Jitter      int    `json:"jitter"`
 }
 
 // Generates the implant to be deployed on the target system given the agent config
@@ -42,4 +44,6 @@ type AgentRegisterData struct {
 	InternalIp  string `json:"ip"`
 	Pid         int64  `json:"pid"`
 	ProcessName string `json:"process_name"`
+	Sleep       int    `json:"sleep"`
+	Jitter      int    `json:"jitter"`
 }

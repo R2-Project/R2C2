@@ -1,5 +1,5 @@
 use std::fs;
-use sysinfo::{Pid, PidExt, ProcessExt, System, SystemExt, UserExt};
+use sysinfo::System;
 
 pub fn ls_command(args: &str) -> String {
     let cwd = std::env::current_dir().unwrap();
@@ -145,16 +145,17 @@ pub fn ps() -> String {
     let mut ps_list = Vec::new();
 
     ps_list.push(format!(
-        "{:<8} {:<30} {:<15} {:<10}",
+        "{:<8} {:<60} {:<15} {:<10}",
         "PID", "NAME", "MEM (MB)", "CPU (%)",
     ));
-    ps_list.push(format!("{}", "-".repeat(65)));
+    ps_list.push(format!("{}", "-".repeat(95)));
 
     for (pid, process) in sys.processes() {
+        let pid_str = pid.to_string();
         ps_list.push(format!(
-            "{:<8} {:<30} {:<15.2} {:<10.2}",
-            pid,
-            truncate(process.name().to_str().expect("unknown"), 30),
+            "{:<8} {:<60} {:<15.2} {:<10.2}",
+            pid_str,
+            truncate(process.name().to_str().expect("unknown"), 60),
             process.memory() as f64 / 1024.0 / 1024.0, // bytes to MB
             process.cpu_usage()
         ));

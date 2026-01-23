@@ -1,9 +1,4 @@
 import { useState, useEffect } from "react";
-import { 
-  X,
-  Minimize2,
-  Maximize2
-} from "lucide-react";
 import CommandInterface from "./CommandInterface";
 import { Request } from "../../wailsjs/go/main/App";
 import { EventsOn } from "../../wailsjs/runtime/runtime";
@@ -23,6 +18,8 @@ interface SessionData {
     pid: number;
     last_ping: string;
     status: string;
+    sleep: number;
+    jitter: number;
 }
 
 export default function Session({ sessionId = "SESSION_001", onClose }: SessionProps) {
@@ -105,9 +102,29 @@ export default function Session({ sessionId = "SESSION_001", onClose }: SessionP
     return `${diff}ms`
   }
 
+  function getSessionStatus(session: SessionData) {
+      if (!session.last_ping || session.last_ping.startsWith("0001-01-01")) {
+          return "inactive";
+      }
+
+      const lastPingTime = new Date(session.last_ping).getTime();
+      const diffMs = now - lastPingTime;
+      
+      const sleepMs = (session.sleep || 0) * 1000;
+      const jitterMs = sleepMs * ((session.jitter || 0) / 100);
+      const maxDelay = sleepMs + jitterMs;
+      
+      if (diffMs <= maxDelay) {
+          return "active";
+      }
+      return "unhealthy";
+  }
+
   if (!sessionData) {
       return <div className="flex items-center justify-center h-full w-full c2-bg-dark text-white">Loading session...</div>;
   }
+  
+  const currentStatus = getSessionStatus(sessionData);
 
   return (
     <div className="flex flex-col h-full w-full c2-bg-dark c2-text font-mono border c2-border shadow-lg">
@@ -115,7 +132,10 @@ export default function Session({ sessionId = "SESSION_001", onClose }: SessionP
       <div className="flex items-center justify-between px-4 py-2 c2-bg-panel border-b c2-border select-none">
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-2">
-            <div className={`w-2 h-2 rounded-full ${sessionData.status === 'active' ? 'bg-green-500 animate-pulse' : 'bg-gray-500'}`} />
+            <div className={`w-2 h-2 rounded-full ${
+                currentStatus === 'active' ? 'bg-green-500 animate-pulse' : 
+                currentStatus === 'unhealthy' ? 'bg-red-500' : 'bg-gray-500'
+            }`} />
             <span className="font-bold c2-text-accent">{sessionData.id} | {sessionData.user}@{sessionData.hostname}</span>
           </div>
           <div className="h-4 w-px c2-bg-border" />
