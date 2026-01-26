@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,16 +9,25 @@ import {
 } from "@/components/ui/dropdown-menu";
 import NewSession from '@/components/menu/NewSession'
 import { useTheme } from "@/global/hooks/useTheme"
+import { useWebSocket } from "@/lib/websocket-context";
 
 interface TopMenuProps {
   onAddView: (componentType: string, title: string) => void;
 }
 
 export default function MenuBar({ onAddView }: { onAddView: (componentName: string, componentTitle: string, targetTabsetId: string) => void }) {
-  const [connectionStatus, setConnectionStatus] = useState("Connected");
+  const { isConnected } = useWebSocket();
   const [activeSessions, setActiveSessions] = useState(3);
   const [newSessionDialogOpen, setNewSessionDialogOpen] = useState(false);
   const { setTheme, themes } = useTheme()
+  const [serverAddress, setServerAddress] = useState("Unknown");
+
+  useEffect(() => {
+    const savedUrl = localStorage.getItem('serverUrl');
+    if (savedUrl) {
+      setServerAddress(savedUrl.replace(/^https?:\/\//, ''));
+    }
+  }, []);
 
   return (
     <>
@@ -120,10 +129,12 @@ export default function MenuBar({ onAddView }: { onAddView: (componentName: stri
 
         <div className="ml-auto flex items-center space-x-4">
           <span className="flex items-center space-x-1">
-            <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-            <span className="c2-text-dim">{connectionStatus}</span>
+            <div className={`w-2 h-2 rounded-full ${isConnected ? "bg-green-400" : "bg-red-400"}`}></div>
+            <span className={isConnected ? "c2-text-accent" : "c2-text-error"}>
+              {isConnected ? "Connected" : "Disconnected"}
+            </span>
           </span>
-          <span className="c2-text-dim">192.168.1.2</span>
+          <span className="c2-text-dim">{serverAddress}</span>
         </div>
       </div>
 

@@ -1,5 +1,24 @@
 package agents
 
+type NewAgentRequest struct {
+	Name     string `json:"name"`
+	Listener string `json:"listener"`
+	Arch     string `json:"arch"`
+	Format   string `json:"format"`
+}
+
+type AgentRegisterData struct {
+	Arch        string `json:"arch"`
+	Platform    string `json:"platform"`
+	Hostname    string `json:"hostname"`
+	User        string `json:"username"`
+	InternalIp  string `json:"ip"`
+	Pid         int64  `json:"pid"`
+	ProcessName string `json:"process_name"`
+	Sleep       int    `json:"sleep"`
+	Jitter      int    `json:"jitter"`
+}
+
 type Agent struct {
 	Id       string `json:"id"`
 	Name     string `json:"name"`
@@ -27,23 +46,4 @@ type Agent struct {
 func (a *Agent) Build() error {
 	// Placeholder for build logic
 	return nil
-}
-
-type NewAgentRequest struct {
-	Name     string `json:"name"`
-	Listener string `json:"listener"`
-	Arch     string `json:"arch"`
-	Format   string `json:"format"`
-}
-
-type AgentRegisterData struct {
-	Arch        string `json:"arch"`
-	Platform    string `json:"platform"`
-	Hostname    string `json:"hostname"`
-	User        string `json:"username"`
-	InternalIp  string `json:"ip"`
-	Pid         int64  `json:"pid"`
-	ProcessName string `json:"process_name"`
-	Sleep       int    `json:"sleep"`
-	Jitter      int    `json:"jitter"`
 }
