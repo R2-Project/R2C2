@@ -25,9 +25,8 @@ pub struct Beacon {
 impl Beacon {
     fn new() -> Self {
         Beacon {
-            id: std::env::var("SESSION_ID").expect("no session id provided"),
-            listener_address: std::env::var("LISTENER_ADDRESS")
-                .expect("no listener address provided"),
+            id: env!("SESSION_ID").to_string(),
+            listener_address: env!("LISTENER_ADDRESS").to_string(),
             sleep: Duration::from_secs(5),
             jitter: Duration::from_secs(2),
         }
