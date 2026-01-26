@@ -201,11 +201,9 @@ func StartServer(port int) error {
 			return
 		}
 
-		operatorId := "anakin" // FIXME:
-
 		ctx := c.Request.Context()
 
-		responseMessage, err := aiService.Chat(ctx, operatorId, aiRequest.Message)
+		responseMessage, err := aiService.Chat(ctx, c.GetString("operator_id"), aiRequest.Message)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
