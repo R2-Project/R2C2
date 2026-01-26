@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Request } from "../../../wailsjs/go/main/App"
+import { ApiRequest } from '@/lib/api';
 
 type Props = {
   open: boolean
@@ -51,7 +51,7 @@ export default function NewAgent({ open, onOpenChange, onCreated }: Props) {
         serverUrl = `http://${serverUrl}`;
       }
       const headers = token ? { "Authorization": `Bearer ${token}` } : {};
-      const response = await Request("GET", `${serverUrl}/listeners`, headers, "");
+      const response = await ApiRequest("GET", `${serverUrl}/listeners`, headers, "");
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         const data = JSON.parse(response.body);
@@ -116,7 +116,7 @@ export default function NewAgent({ open, onOpenChange, onCreated }: Props) {
         os
       };
 
-      const response = await Request("POST", `${serverUrl}/agents`, headers, JSON.stringify(payload));
+      const response = await ApiRequest("POST", `${serverUrl}/agents`, headers, JSON.stringify(payload));
       
       if (response.statusCode >= 200 && response.statusCode < 300) {
         setSuccess("Agent created successfully")

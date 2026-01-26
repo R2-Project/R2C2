@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { ChevronRight } from "lucide-react";
-import { Request } from "../../wailsjs/go/main/App";
+import { ApiRequest } from "@/lib/api";
 import { EventsOn } from "../../wailsjs/runtime/runtime";
 
 interface CommandArg {
@@ -74,7 +74,7 @@ export default function CommandInterface({ sessionId }: CommandInterfaceProps) {
           args: []
         };
 
-        const response = await Request("POST", `${serverUrl}/tasks`, headers, JSON.stringify(payload));
+        const response = await ApiRequest("POST", `${serverUrl}/tasks`, headers, JSON.stringify(payload));
         if (response.statusCode === 200) {
                    const data = JSON.parse(response.body);
                    // The server returns an object { commands: [...] }
@@ -198,7 +198,7 @@ export default function CommandInterface({ sessionId }: CommandInterfaceProps) {
             args: args
         };
 
-        const response = await Request("POST", `${serverUrl}/tasks`, headers, JSON.stringify(payload));
+        const response = await ApiRequest("POST", `${serverUrl}/tasks`, headers, JSON.stringify(payload));
         const respData = response.body ? JSON.parse(response.body) : {};
 
         // Handle successful task queuing (201 Created or 200 OK with message only)

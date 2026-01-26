@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import CommandInterface from "./CommandInterface";
-import { Request } from "../../wailsjs/go/main/App";
+import { ApiRequest } from "@/lib/api";
 import { EventsOn } from "../../wailsjs/runtime/runtime";
 
 interface SessionProps {
@@ -64,7 +64,7 @@ export default function Session({ sessionId = "SESSION_001", onClose }: SessionP
 
         const headers = token ? { "Authorization": `Bearer ${token}` } : {};
         // We fetch all because there isn't a single endpoint yet, optimization for later
-        const response = await Request("GET", `${serverUrl}/sessions`, headers, "");
+        const response = await ApiRequest("GET", `${serverUrl}/sessions`, headers, "");
 
         if (response.statusCode >= 200 && response.statusCode < 300) {
             const data = JSON.parse(response.body);

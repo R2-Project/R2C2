@@ -26,6 +26,16 @@ export const AuthenticationProvider = ({ children }: { children: React.ReactNode
             setIsLoading(false);
         };
         initAuth();
+
+        const handleLogout = () => {
+            localStorage.removeItem("token");
+            localStorage.removeItem("userInfo");
+            setIsLogged(false);
+            setLocation("/login");
+        };
+
+        window.addEventListener("auth:logout", handleLogout);
+        return () => window.removeEventListener("auth:logout", handleLogout);
     }, []);
 
     if (isLoading) {

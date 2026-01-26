@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Request } from '../../../wailsjs/go/main/App';
+import { ApiRequest } from '@/lib/api';
 
 type Props = {
   open: boolean
@@ -79,7 +79,7 @@ export default function NewListener({ open, onOpenChange, onCreated }: Props) {
 
       const token = localStorage.getItem("token");
       const headers = token ? { "Authorization": `Bearer ${token}` } : {};
-      const response = await Request("POST", `${serverUrl}/listeners`, headers, JSON.stringify(payload));
+      const response = await ApiRequest("POST", `${serverUrl}/listeners`, headers, JSON.stringify(payload));
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         setSuccess("Listener created")

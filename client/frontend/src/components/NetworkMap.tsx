@@ -23,7 +23,7 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu"
-import { Request } from "../../wailsjs/go/main/App";
+import { ApiRequest } from "@/lib/api";
 import { EventsOn } from "../../wailsjs/runtime/runtime";
 
 interface Session {
@@ -204,7 +204,7 @@ export default function NetworkMap({ onAddView, onOpenSession }: NetworkMapProps
         }
         
         const headers = token ? { "Authorization": `Bearer ${token}` } : {};
-        const resp = await Request("GET", `${serverUrl}/sessions`, headers, "");
+        const resp = await ApiRequest("GET", `${serverUrl}/sessions`, headers, "");
         if (resp.statusCode === 200) {
             const sessions: Session[] = JSON.parse(resp.body);
             recalculateGraph(sessions);

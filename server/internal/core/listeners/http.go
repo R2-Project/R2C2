@@ -2,6 +2,7 @@ package listeners
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -100,7 +101,7 @@ func (h *HttpListener) Start() error {
 		h.mu.Unlock()
 	}()
 
-	logger.Info("Started HTTP listener", "listener_id", h.Id, "host", h.Host, "port", port)
+	logger.Info(fmt.Sprintf("Started HTTP listener: %s", h.Name), "listener_id", h.Id, "host", h.Host, "port", port)
 	return nil
 }
 
