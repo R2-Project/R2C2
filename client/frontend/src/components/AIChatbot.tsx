@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import * as ScrollArea from "@radix-ui/react-scroll-area";
-import R2C2Icon from '@/assets/images/r2c2-1.jpeg';
-import { Request } from "../../wailsjs/go/main/App";
-import { Loader2, Send } from "lucide-react";
-
+import R2C2Icon from '@/assets/images/r2c2-4.png';
+import { ApiRequest } from "@/lib/api";
+import { Loader2, Send } from "lucide-react";import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 function Chatbot() {
   const [messages, setMessages] = useState([
     { id: 1, text: "Hi! How can I help you today?", sender: "bot" },
@@ -47,10 +47,10 @@ function Chatbot() {
           serverUrl = `http://${serverUrl}`;
       }
 
-      const headers = token ? { "Authorization": `Bearer ${token}` } : {};
+      const headers: Record<string, string> = token ? { "Authorization": `Bearer ${token}` } : {};
       const body = JSON.stringify({ message: newText });
       
-      const response = await Request("POST", `${serverUrl}/ai/query`, headers, body);
+      const response = await ApiRequest("POST", `${serverUrl}/ai/query`, headers, body);
       
       let botResponse = "I'm sorry, I couldn't process that request.";
       if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -109,15 +109,42 @@ function Chatbot() {
                   }`}
               >
                 {message.sender === 'bot' && (
-                  <img src={R2C2Icon} alt="Bot" className="w-8 h-8 rounded-full mb-1 border border-border" />
+                  <img src={R2C2Icon} alt="Bot" className="w-10 h-10 rounded-full mb-1" />
                 )}
                 <div
-                  className={`p-3 rounded-lg max-w-xs text-sm ${message.sender === "user"
+                  className={`p-3 rounded-lg max-w-[80%] text-sm overflow-hidden ${message.sender === "user"
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted text-foreground border border-border"
                     }`}
                 >
-                  {message.text}
+                  {message.sender === "bot" ? (
+                    <div className="markdown-content prose prose-sm dark:prose-invert max-w-none break-words">
+                       <ReactMarkdown 
+                          remarkPlugins={[remarkGfm]}
+                          components={{
+                            // Override pre/code so they don't look weird inside the chat bubble
+                            code({node, inline, className, children, ...props}: any) {
+                              const match = /language-(\w+)/.exec(className || '')
+                              return !inline && match ? (
+                                <div className="rounded-md bg-zinc-950 p-2 my-2 overflow-x-auto">
+                                    <code className={className} {...props}>
+                                        {children}
+                                    </code>
+                                </div>
+                              ) : (
+                                <code className="bg-black/20 rounded px-1 py-0.5" {...props}>
+                                  {children}
+                                </code>
+                              )
+                            }
+                          }}
+                       >
+                         {message.text}
+                       </ReactMarkdown>
+                    </div>
+                  ) : (
+                    message.text
+                  )}
                 </div>
               </div>
             ))}

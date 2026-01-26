@@ -1,16 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AlertCircle, Info, AlertTriangle, Bug, CheckCircle } from "lucide-react";
 import { EventsOn } from '../../wailsjs/runtime/runtime';
-
-type LogLevel = "info" | "debug" | "error" | "warning" | "success";
-
-interface LogEntry {
-  time: string;
-  level: LogLevel;
-  message: string;
-  [key: string]: any;
-}
+import { useLogStore, LogEntry, LogLevel } from '@/global/stores/logStore';
 
 const getLevelColor = (level: LogLevel) => {
   switch (level) {
@@ -34,7 +26,7 @@ const getLevelIcon = (level: LogLevel) => {
 };
 
 export default function Logs() {
-  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const { logs, addLog } = useLogStore();
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -73,25 +65,25 @@ export default function Logs() {
             logEntry.level = "info";
         }
         
-        setLogs((prevLogs) => [...prevLogs, logEntry]);
+        addLog(logEntry);
       } catch (e) {
         console.error("Failed to parse log message:", message, e);
         // Optionally add a raw log entry if parsing fails
-        setLogs((prevLogs) => [...prevLogs, {
+        addLog({
             time: new Date().toISOString(),
             level: "info",
             message: message
-        }]);
+        });
       }
     });
 
     const cancelNetworkError = EventsOn("network:error", (error: string) => {
         console.error("Network error:", error);
-        setLogs((prevLogs) => [...prevLogs, {
+        addLog({
             time: new Date().toISOString(),
             level: "error",
             message: `Network Error: ${error}`
-        }]);
+        });
     });
 
     return () => {

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
-import { useToast } from "@/global/hooks/use-toast";
+import { useAuth } from "@/global/hooks/useAuth";
+import { useLogStore } from "@/global/stores/logStore";
 
 interface WebSocketContextType {
   socket: WebSocket | null;
@@ -24,8 +25,9 @@ interface WebSocketProviderProps {
 export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }) => {
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  const { toast } = useToast();
   const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
+  const { isLogged } = useAuth();
+  const { addLog } = useLogStore();
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -52,9 +54,10 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
       ws.onopen = () => {
         console.log('WebSocket connected');
         setIsConnected(true);
-        toast({
-          title: "Connected",
-          description: "Real-time connection established.",
+        addLog({
+             time: new Date().toISOString(),
+             level: "success",
+             message: "Real-time connection established"
         });
       };
 
@@ -84,7 +87,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
         clearTimeout(reconnectTimeoutRef.current);
       }
     };
-  }, []); // Dependency array is empty to run once on mount, but we might need to listen to storage changes or auth state
+  }, [isLogged]); // Re-connect when login status changes
 
   const sendMessage = (message: any) => {
     if (socket && isConnected) {

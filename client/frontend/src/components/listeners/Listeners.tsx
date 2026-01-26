@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import NewListener from "./NewListener"
 import NewAgent from "../agents/NewAgent"
-import { Request } from '../../../wailsjs/go/main/App';
+import { ApiRequest } from '@/lib/api';
 
 type Props = {
   onAddView?: (componentName: string, componentTitle: string, targetTabsetId: string) => void
@@ -47,7 +47,7 @@ export default function Listeners({ onAddView }: Props) {
         serverUrl = `http://${serverUrl}`;
       }
       const headers = token ? { "Authorization": `Bearer ${token}` } : {};
-      const response = await Request("GET", `${serverUrl}/listeners`, headers, "");
+      const response = await ApiRequest("GET", `${serverUrl}/listeners`, headers, "");
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         const data = JSON.parse(response.body);
