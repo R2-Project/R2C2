@@ -190,9 +190,19 @@ func (s *AIService) SetupTools() {
 			agentId := args["agent_id"].(string)
 			command := args["command"].(string)
 			var cmdArgs []string
-			if args["args"] != nil {
-				for _, arg := range args["args"].([]interface{}) {
-					cmdArgs = append(cmdArgs, arg.(string))
+
+			if val, ok := args["args"]; ok && val != nil {
+				switch v := val.(type) {
+				case []interface{}:
+					for _, arg := range v {
+						if s, ok := arg.(string); ok {
+							cmdArgs = append(cmdArgs, s)
+						}
+					}
+				case string:
+					cmdArgs = append(cmdArgs, v)
+				default:
+					logger.Error("AI tool unexpected type for args", nil, fmt.Sprintf("%T", val))
 				}
 			}
 
