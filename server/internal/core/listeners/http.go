@@ -126,6 +126,7 @@ func (h *HttpListener) IsRunning() bool {
 }
 
 func (h *HttpListener) handleRequest(ctx *gin.Context) {
+	// TODO: make this header configurable
 	agentId := ctx.GetHeader("X-Agent-ID")
 	if agentId == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Missing X-Agent-ID header"})
@@ -135,10 +136,10 @@ func (h *HttpListener) handleRequest(ctx *gin.Context) {
 	externalIp := ctx.ClientIP()
 
 	// TODO::
-	// - handle authentication
+	// - [DONE] handle authentication via agent ID
 	// - [DONE] this could be a task fetch request or a task result submission, hanle both
 	// - handle decrpytion (future)
-	// - Respond with sleep time and jitter
+	// - [DONE] Respond with sleep time and jitter
 
 	if ctx.Request.Method == http.MethodPost {
 		var registerData agents.AgentRegisterData
@@ -191,11 +192,6 @@ func (h *HttpListener) handleRequest(ctx *gin.Context) {
 			return
 		}
 
-		// if err := json.NewDecoder(ctx.Request.Body).Decode(&result); err != nil {
-		// 	logger.Error("Error decoding task result", err)
-		// 	return
-		// }
-
 		if result.Task.Command == "sleep" {
 			sleep := result.Task.Args[0]
 			jitter := result.Task.Args[1]
@@ -222,7 +218,6 @@ func (h *HttpListener) handleRequest(ctx *gin.Context) {
 			}
 		}
 
-		// FIXME: see if we can merge this two
 		err = h.TaskManager.SubmitTaskResult(result)
 		if err != nil {
 			logger.Error("error updating task status", err, "task_id", result.Task.Id)

@@ -68,14 +68,26 @@ func (tm *TaskManager) FetchTasks(agentId string) (*[]Task, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	if len(*tasks) > 0 {
+		data, err := json.Marshal(map[string]string{"agent_id": agentId, "timestamp": time.Now().Format(time.RFC3339)})
+		if err != nil {
+			logger.Error("error marshalling task fetch event data", err)
+		}
+
+		// TODO: this should be sent to the operator who queued the task
+		broadcaster.BroadcastEvent(broadcaster.TASK_FETCH_EVENT, string(data))
+	}
+
 	return tasks, nil
 }
 
 func (tm *TaskManager) SubmitTaskResult(task TaskResult) error {
 
 	taskData := Task{
-		Id:     task.Task.Id,
-		Status: TaskStatusCompleted,
+		Id:         task.Task.Id,
+		Status:     TaskStatusCompleted,
+		SubmitedAt: time.Now().Format(time.RFC3339),
 	}
 	err := tm.TaskRepository.UpdateTask(&taskData)
 	if err != nil {

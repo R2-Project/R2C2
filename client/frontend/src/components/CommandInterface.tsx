@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { ChevronRight } from "lucide-react";
 import { ApiRequest } from "@/lib/api";
 import { EventsOn } from "../../wailsjs/runtime/runtime";
+import { useWebSocket } from "@/lib/websocket-context";
 
 interface CommandArg {
     name: string;
@@ -24,6 +25,7 @@ interface ConsoleEntry {
   timestamp: Date;
   level?: "info" | "success" | "warning" | "error";
   raw?: boolean;
+  segments?: { text: string; className?: string }[];
 }
 
 interface CommandInterfaceProps {
@@ -49,6 +51,51 @@ export default function CommandInterface({ sessionId }: CommandInterfaceProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [availableCommands, setAvailableCommands] = useState<string[]>([]);
   const [suggestion, setSuggestion] = useState("");
+  const { socket } = useWebSocket();
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleMessage = (event: MessageEvent) => {
+      try {
+        const message = JSON.parse(event.data);
+        if (message.event === "task:fetch") {
+          const payload = JSON.parse(message.data);
+          
+          if (sessionId && payload.agent_id !== sessionId) return;
+
+          const dateObj = new Date(payload.timestamp);
+          const timeStr = dateObj.toLocaleTimeString([], { hour12: false });
+          const contentStr = `${timeStr} Agent ${payload.agent_id} fetched tasks`;
+
+          const newEntry: ConsoleEntry = {
+            id: String(Date.now()),
+            type: "system",
+            content: contentStr,
+            timestamp: new Date(),
+            level: "info",
+            segments: [
+                { text: "[*] ", className: "c2-text-info" },
+                { text: `${timeStr} `, className: "c2-text-dim" },
+                { text: "agent ", className: "text-white" },
+                { text: payload.agent_id, className: "c2-text-purple" },
+                { text: " fetched tasks", className: "text-white" }
+            ]
+          };
+
+          setEntries((prev) => [...prev, newEntry]);
+        }
+      } catch (e) {
+        console.error("Error processing websocket message", e);
+      }
+    };
+
+    socket.addEventListener("message", handleMessage);
+
+    return () => {
+      socket.removeEventListener("message", handleMessage);
+    };
+  }, [socket, sessionId]);
 
   useEffect(() => {
     consoleEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -137,13 +184,31 @@ export default function CommandInterface({ sessionId }: CommandInterfaceProps) {
               
               if (agentId !== sessionId) return;
 
+              const taskId = result.task?.id || "UNKNOWN";
+              let timeStr = new Date().toLocaleTimeString([], { hour12: false });
+              // Try to use task submit/creation time if available
+              if (result.task?.submited_at || result.task?.timestamp) {
+                   const ts = result.task?.submited_at || result.task?.timestamp;
+                   const d = new Date(ts);
+                   if (!isNaN(d.getTime())) {
+                       timeStr = d.toLocaleTimeString([], { hour12: false });
+                   }
+              }
+              const outputText = result.output || result.error || "(No output)";
+
               setEntries(prev => [...prev, {
                   id: Date.now().toString(),
                   type: "output",
-                  content: result.output || result.error || "(No output)",
+                  content: `[+] ${timeStr} Task ${taskId} result:\n${outputText}`,
                   timestamp: new Date(),
                   level: result.error ? "error" : "success",
-                  raw: true 
+                  raw: true,
+                  segments: [
+                      { text: "[+] ", className: "text-green-400" },
+                      { text: `${timeStr} `, className: "c2-text-dim" },
+                      { text: `Task ${taskId} result:\n`, className: "text-white" },
+                      { text: outputText, className: "text-gray-300 block mt-1" }
+                  ]
               }]);
           } catch(e) {
               console.error("Error parsing task result", e);
@@ -203,12 +268,19 @@ export default function CommandInterface({ sessionId }: CommandInterfaceProps) {
 
         // Handle successful task queuing (201 Created or 200 OK with message only)
         if (response.statusCode === 201 || (response.statusCode === 200 && !respData.commands)) {
+             const now = new Date();
+             const timeStr = now.toLocaleTimeString([], { hour12: false });
              setEntries(prev => [...prev, {
                  id: Date.now().toString(),
                  type: "system",
-                 content: `[+] ${respData.message || "Task queued"}`,
-                 timestamp: new Date(),
-                 level: "success"
+                 content: `[*] ${timeStr} ${respData.message || "Task queued"}`,
+                 timestamp: now,
+                 level: "success",
+                 segments: [
+                    { text: "[*] ", className: "c2-text-info" },
+                    { text: `${timeStr} `, className: "c2-text-dim" },
+                    { text: respData.message || "Task queued", className: "text-white" }
+                 ]
              }]);
              return;
         } 
@@ -327,7 +399,13 @@ export default function CommandInterface({ sessionId }: CommandInterfaceProps) {
             if (entry.type === "output") {
                 return (
                     <div key={entry.id} className="text-gray-300 ml-0 break-words whitespace-pre-wrap">
-                        {entry.content}
+                        {entry.segments ? (
+                            entry.segments.map((seg, idx) => (
+                                <span key={idx} className={seg.className}>{seg.text}</span>
+                            ))
+                        ) : (
+                            entry.content
+                        )}
                     </div>
                 );
             }
@@ -339,7 +417,13 @@ export default function CommandInterface({ sessionId }: CommandInterfaceProps) {
             
             return (
                 <div key={entry.id} className={`${colorClass} whitespace-pre-wrap`}>
-                   {entry.content}
+                   {entry.segments ? (
+                       entry.segments.map((seg, idx) => (
+                           <span key={idx} className={seg.className}>{seg.text}</span>
+                       ))
+                   ) : (
+                       entry.content
+                   )}
                 </div>
             );
         })}

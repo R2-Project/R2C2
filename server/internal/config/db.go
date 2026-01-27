@@ -150,7 +150,8 @@ func (d *Database) createTasksTable() error {
 		"command" TEXT,
 		"args" JSON,
 		"status" TEXT,
-		"timestamp" DATETIME DEFAULT CURRENT_TIMESTAMP
+		"timestamp" DATETIME DEFAULT CURRENT_TIMESTAMP,
+		"submited_at" DATETIME NULL
 	);`
 
 	statement, err := d.db.Prepare(createTableSQL)
