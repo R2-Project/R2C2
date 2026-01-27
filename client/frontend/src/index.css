@@ -37,6 +37,7 @@
   --c2-error: hsl(0, 84%, 60%);
   --c2-text: hsl(0, 0%, 88%);
   --c2-text-dim: hsl(0, 0%, 63%);
+  --c2-purple: hsl(265, 89%, 78%);
 }
 
 .dark {
@@ -121,6 +122,7 @@
   .c2-text-error { color: var(--c2-error); }
   .c2-text { color: var(--c2-text); }
   .c2-text-dim { color: var(--c2-text-dim); }
+  .c2-text-purple { color: var(--c2-purple); }
 }
 
 /* Custom scrollbar styling */

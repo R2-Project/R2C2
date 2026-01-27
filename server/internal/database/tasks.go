@@ -23,13 +23,13 @@ func (r *TasksRepository) SaveTask(task *tasks.Task) error {
 		return err
 	}
 
-	query := `INSERT INTO tasks (id, agent_id, command, args, status, timestamp) VALUES (?, ?, ?, ?, ?, ?)`
-	_, err = r.db.Exec(query, task.Id, task.AgentId, task.Command, args, task.Status, task.Timestamp)
+	query := `INSERT INTO tasks (id, agent_id, command, args, status, timestamp, submited_at) VALUES (?, ?, ?, ?, ?, ?, ?)`
+	_, err = r.db.Exec(query, task.Id, task.AgentId, task.Command, args, task.Status, task.Timestamp, task.SubmitedAt)
 	return err
 }
 
 func (r *TasksRepository) GetTasks() (*[]tasks.Task, error) {
-	query := `SELECT id, agent_id, command, args, status, timestamp FROM tasks`
+	query := `SELECT id, agent_id, command, args, status, timestamp, submited_at FROM tasks`
 	rows, err := r.db.Query(query)
 	if err != nil {
 		return nil, err
@@ -38,7 +38,7 @@ func (r *TasksRepository) GetTasks() (*[]tasks.Task, error) {
 	var result []tasks.Task
 	for rows.Next() {
 		var task tasks.Task
-		if err := rows.Scan(&task.Id, &task.AgentId, &task.Command, &task.Args, &task.Status, &task.Timestamp); err != nil {
+		if err := rows.Scan(&task.Id, &task.AgentId, &task.Command, &task.Args, &task.Status, &task.Timestamp, &task.SubmitedAt); err != nil {
 			return nil, err
 		}
 		result = append(result, task)
@@ -47,17 +47,17 @@ func (r *TasksRepository) GetTasks() (*[]tasks.Task, error) {
 }
 
 func (r *TasksRepository) GetTaskById(id string) (*tasks.Task, error) {
-	query := `SELECT id, agent_id, command, args, status, timestamp FROM tasks WHERE id = ?`
+	query := `SELECT id, agent_id, command, args, status, timestamp, submited_at FROM tasks WHERE id = ?`
 	row := r.db.QueryRow(query, id)
 	var task tasks.Task
-	if err := row.Scan(&task.Id, &task.AgentId, &task.Command, &task.Args, &task.Status, &task.Timestamp); err != nil {
+	if err := row.Scan(&task.Id, &task.AgentId, &task.Command, &task.Args, &task.Status, &task.Timestamp, &task.SubmitedAt); err != nil {
 		return nil, err
 	}
 	return &task, nil
 }
 
 func (r *TasksRepository) GetPendingTasks(agentId string) (*[]tasks.Task, error) {
-	query := `SELECT id, agent_id, command, args, status, timestamp FROM tasks WHERE agent_id = ? AND status = 'pending'`
+	query := `SELECT id, agent_id, command, args, status, timestamp, submited_at FROM tasks WHERE agent_id = ? AND status = 'pending'`
 	rows, err := r.db.Query(query, agentId)
 	if err != nil {
 		return nil, err
@@ -69,7 +69,7 @@ func (r *TasksRepository) GetPendingTasks(agentId string) (*[]tasks.Task, error)
 		var task tasks.Task
 		task.Args = []string{}
 		var argsJson []byte
-		if err := rows.Scan(&task.Id, &task.AgentId, &task.Command, &argsJson, &task.Status, &task.Timestamp); err != nil {
+		if err := rows.Scan(&task.Id, &task.AgentId, &task.Command, &argsJson, &task.Status, &task.Timestamp, &task.SubmitedAt); err != nil {
 			return nil, err
 		}
 		if len(argsJson) > 0 {
@@ -86,7 +86,7 @@ func (r *TasksRepository) GetPendingTasks(agentId string) (*[]tasks.Task, error)
 }
 
 func (r *TasksRepository) UpdateTask(task *tasks.Task) error {
-	query := `UPDATE tasks SET status = ? WHERE id = ?`
-	_, err := r.db.Exec(query, task.Status, task.Id)
+	query := `UPDATE tasks SET status = ?, submited_at = ? WHERE id = ?`
+	_, err := r.db.Exec(query, task.Status, task.SubmitedAt, task.Id)
 	return err
 }

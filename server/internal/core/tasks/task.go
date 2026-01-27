@@ -3,12 +3,13 @@ package tasks
 import "github.com/google/uuid"
 
 type Task struct {
-	Id        string   `json:"id"`
-	AgentId   string   `json:"agent_id"`
-	Command   string   `json:"command"`
-	Args      []string `json:"args"`
-	Status    string   `json:"status"`
-	Timestamp string   `json:"timestamp"`
+	Id         string   `json:"id"`
+	AgentId    string   `json:"agent_id"`
+	Command    string   `json:"command"`
+	Args       []string `json:"args"`
+	Status     string   `json:"status"`
+	Timestamp  string   `json:"timestamp"`
+	SubmitedAt string   `json:"submited_at,omitempty"`
 }
 
 func (t *Task) GetId() string {
