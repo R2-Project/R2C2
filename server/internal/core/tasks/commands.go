@@ -71,4 +71,33 @@ var CommandsRegistry = []CommandDefinition{
 		Description: "List running processes",
 		Usage:       "ps",
 	},
+	{
+		Name:        "cat",
+		Description: "Show a file's contents",
+		Usage:       "cat <file_path>",
+		Args: []CommandArg{
+			{
+				Name:     "file_path",
+				Required: true,
+				Desc:     "Path to the file to display",
+			},
+		},
+	},
+	{
+		Name:        "mkdir",
+		Description: "Create a new directory",
+		Usage:       "mkdir <directory_path>",
+		Args: []CommandArg{
+			{
+				Name:     "directory_path",
+				Required: true,
+				Desc:     "Path of the directory to create",
+			},
+		},
+	},
+	{
+		Name:        "env",
+		Description: "Display environment variables",
+		Usage:       "env",
+	},
 }
