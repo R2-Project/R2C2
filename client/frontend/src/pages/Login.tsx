@@ -132,6 +132,7 @@ export default function Login() {
             <Button className="w-full" type="submit" disabled={isLoading}>
               {isLoading ? "Logging in..." : "Login"}
             </Button>
+            {/*}
             <Button
               variant="ghost"
               className="w-full text-xs text-muted-foreground hover:text-primary"
@@ -140,6 +141,7 @@ export default function Login() {
             >
               Developer Mode (Bypass Login)
             </Button>
+            */}
           </CardFooter>
         </form>
       </Card>

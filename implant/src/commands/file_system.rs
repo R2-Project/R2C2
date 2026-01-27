@@ -1,5 +1,4 @@
 use std::fs;
-use sysinfo::System;
 
 pub fn ls_command(args: &str) -> String {
     let cwd = std::env::current_dir().unwrap();
@@ -92,81 +91,40 @@ pub fn cd(args: &str) -> String {
     }
 }
 
-pub fn shell(args: &str) -> String {
-    #[cfg(target_os = "windows")]
-    let (shell, flag) = ("cmd", "/C");
+pub fn cat(args: &str) -> String {
+    if args.is_empty() {
+        return "No file specified.".to_string();
+    }
 
-    #[cfg(not(target_os = "windows"))]
-    let (shell, flag) = ("sh", "-c");
-
-    let output = std::process::Command::new(shell)
-        .args([flag, args])
-        .current_dir(std::env::current_dir().unwrap())
-        .output()
-        .ok();
-
-    let stdout = String::from_utf8_lossy(&output.clone().unwrap().stdout).to_string();
-    let stderr = String::from_utf8_lossy(&output.clone().unwrap().stderr).to_string();
-
-    // TODO: maybe should return both
-    if stderr.is_empty() {
-        stdout
+    let cwd = std::env::current_dir().unwrap();
+    let input_path = std::path::Path::new(args);
+    let file_path = if input_path.is_absolute() {
+        input_path.to_path_buf()
     } else {
-        stderr
+        cwd.join(input_path)
+    };
+
+    match fs::read_to_string(&file_path) {
+        Ok(content) => content,
+        Err(e) => format!("Failed to read file {}: {}", file_path.display(), e),
     }
 }
 
-pub fn whoami() -> String {
-    #[cfg(target_os = "windows")]
-    {
-        std::process::Command::new("whoami")
-            .arg("/all")
-            .output()
-            .map(|output| String::from_utf8_lossy(&output.stdout).to_string())
-            .unwrap_or_else(|e| format!("Failed to execute whoami: {}", e))
+pub fn mkdir(args: &str) -> String {
+    if args.is_empty() {
+        return "No directory name specified.".to_string();
     }
 
-    #[cfg(not(target_os = "windows"))]
-    {
-        std::process::Command::new("whoami")
-            .output()
-            .map(|output| String::from_utf8_lossy(&output.stdout).to_string())
-            .unwrap_or_else(|e| format!("Failed to execute whoami: {}", e))
-    }
-}
+    let cwd = std::env::current_dir().unwrap();
+    let input_path = std::path::Path::new(args);
+    let dir_path = if input_path.is_absolute() {
+        input_path.to_path_buf()
+    } else {
+        cwd.join(input_path)
+    };
 
-pub fn ps() -> String {
-    let mut sys = System::new_all();
-
-    sys.refresh_all();
-    std::thread::sleep(std::time::Duration::from_millis(100));
-    sys.refresh_processes(sysinfo::ProcessesToUpdate::All, true);
-
-    let mut ps_list = Vec::new();
-
-    ps_list.push(format!(
-        "{:<8} {:<60} {:<15} {:<10}",
-        "PID", "NAME", "MEM (MB)", "CPU (%)",
-    ));
-    ps_list.push(format!("{}", "-".repeat(95)));
-
-    for (pid, process) in sys.processes() {
-        let pid_str = pid.to_string();
-        ps_list.push(format!(
-            "{:<8} {:<60} {:<15.2} {:<10.2}",
-            pid_str,
-            truncate(process.name().to_str().expect("unknown"), 60),
-            process.memory() as f64 / 1024.0 / 1024.0, // bytes to MB
-            process.cpu_usage()
-        ));
-    }
-
-    ps_list.join("\n")
-}
-
-fn truncate(s: &str, max_chars: usize) -> &str {
-    match s.char_indices().nth(max_chars) {
-        None => s,
-        Some((idx, _)) => &s[..idx],
+    match fs::create_dir_all(&dir_path) {
+        Ok(_) => format!("Directory created: {}", dir_path.display()),
+        Err(e) => format!("Failed to create directory {}: {}", dir_path.display(), e),
     }
 }

