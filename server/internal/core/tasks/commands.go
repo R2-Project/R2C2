@@ -100,4 +100,9 @@ var CommandsRegistry = []CommandDefinition{
 		Description: "Display environment variables",
 		Usage:       "env",
 	},
+	{
+		Name:        "screenshot",
+		Description: "Take a screenshot of the current screen",
+		Usage:       "screenshot",
+	},
 }

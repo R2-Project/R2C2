@@ -26,6 +26,7 @@ type Config struct {
 	DatabasePath string                   `yaml:"database_path"`
 	JWTSecret    string                   `yaml:"jwt_secret"`
 	AIProvider   AIProviderConfig         `yaml:"ai"`
+	LootPath     string                   `yaml:"loot_path"`
 }
 
 func LoadConfig(path string) (*Config, error) {

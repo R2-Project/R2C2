@@ -5,4 +5,5 @@
 
 pub mod execution;
 pub mod file_system;
+pub mod screenshot;
 pub mod system;
