@@ -5,7 +5,10 @@ operators:
     - username: anakin
       password: admin123
 database_path: ../db/r2c2.db
-jwt_secret: 1678fba3363fba72e4f3bb861e1c2d1639b94cc8b3cb7fb7b5e24df62ed82c8b
+jwt_secret: R2C2R0ck$!
+
+# the directory where all the exfiltrated data will be stored
+loot_path: ./loot
 
 ai:
     provider: openai
