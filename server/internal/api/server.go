@@ -77,11 +77,13 @@ func StartServer(port int) error {
 	})
 
 	// TODO: check gin mode
-	router.GET("/ping", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "pong",
+	if gin.Mode() != gin.ReleaseMode {
+		router.GET("/ping", func(c *gin.Context) {
+			c.JSON(http.StatusOK, gin.H{
+				"message": "pong",
+			})
 		})
-	})
+	}
 
 	db := config.DB.GetInstance()
 	authRepository := database.InitOperatorsRepository(db)
