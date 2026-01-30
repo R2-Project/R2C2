@@ -1,0 +1,93 @@
+name: Client Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-client:
+    name: Build Client (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform_name: linux
+            asset_name: R2C2-Client-Linux
+            build_path: client/build/bin/R2C2
+          - os: windows-latest
+            platform_name: windows
+            asset_name: R2C2-Client-Windows
+            build_path: client/build/bin/R2C2.exe
+          - os: macos-latest
+            platform_name: macos
+            asset_name: R2C2-Client-macOS
+            build_path: client/build/bin/R2C2.app
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Linux Dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev
+
+      - name: Install Wails
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.10.2
+
+      - name: Build Client
+        working-directory: ./client
+        run: |
+          wails build
+
+      - name: Package Client (App Bundle for macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          mkdir -p dist
+          # Copy the .app bundle recursively
+          cp -R "${{ matrix.build_path }}" "dist/${{ matrix.asset_name }}.app"
+          
+          # Create zip using zip command for preserving permissions/symlinks in .app
+          cd dist
+          zip -r "../${{ matrix.asset_name }}.zip" "${{ matrix.asset_name }}.app"
+
+      - name: Package Client (Binary for Linux/Windows)
+        if: matrix.os != 'macos-latest'
+        run: |
+          mkdir -p dist
+          cp "${{ matrix.build_path }}" dist/
+          
+          # Zip the single file
+          cd dist
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+             7z a "../${{ matrix.asset_name }}.zip" "R2C2.exe"
+          else
+             zip -r "../${{ matrix.asset_name }}.zip" "R2C2"
+          fi
+
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: ${{ matrix.asset_name }}.zip
