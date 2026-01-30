@@ -23,6 +23,11 @@
 
 R2C2 is a cutting-edge Command and Control (C2) framework engineered for sophisticated red team engagements and adversary simulation. By combining the concurrency of Go for the Teamserver, the performance and safety of Rust for the Implant, and the flexibility of React + Wails for the Client, R2C2 provides a powerful, seamless experience for operators.
 
+
+<div align="center">
+  <img src="docs/assets/r2c2.jpeg" alt="R2C2 Client" width="600" style="border-radius: 10px;"/>
+</div>
+
 > **⚠️ Disclaimer**: At this moment, the project is not intended to be stealthy, and no evasion techniques have been applied yet.
 This will be implemented in future releases.
 
@@ -48,9 +53,7 @@ This will be implemented in future releases.
   - [Login](docs/02-Client/Login.md)
   - [Creating Listeners](docs/02-Client/Create-listener.md)
 
----
 
 ## ⚖️ Legal Disclaimer
 
 This project is intended for **educational purposes** and **authorized security testing** only. The developers are not responsible for any misuse of this software. Ensure you have explicit permission from the system owner before running this on any network or device.
-
