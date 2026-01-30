@@ -25,7 +25,7 @@ export default function NewAgent({ open, onOpenChange, onCreated }: Props) {
   const [arch, setArch] = useState("x64")
   const [listenerId, setListenerId] = useState("")
   const [listeners, setListeners] = useState<any[]>([])
-  const [format, setFormat] = useState("exe")
+  const [format, setFormat] = useState(".exe")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -163,8 +163,8 @@ export default function NewAgent({ open, onOpenChange, onCreated }: Props) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="windows">Windows</SelectItem>
-                  <SelectItem value="linux">Linux</SelectItem>
-                  <SelectItem value="macos">macOS</SelectItem>
+                  <SelectItem value="linux" disabled>Linux</SelectItem>
+                  <SelectItem value="macos" disabled>macOS</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -177,8 +177,8 @@ export default function NewAgent({ open, onOpenChange, onCreated }: Props) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="x64">x64</SelectItem>
-                  <SelectItem value="x86">x86</SelectItem>
-                  <SelectItem value="arm64">ARM64</SelectItem>
+                  <SelectItem value="x86" disabled>x86</SelectItem>
+                  <SelectItem value="arm64" disabled>ARM64</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -205,11 +205,8 @@ export default function NewAgent({ open, onOpenChange, onCreated }: Props) {
                 <SelectValue placeholder="Select Format" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="exe">Executable (.exe)</SelectItem>
-                <SelectItem value="elf">ELF Binary</SelectItem>
-                <SelectItem value="macho">Mach-O</SelectItem>
-                <SelectItem value="dll">DLL</SelectItem>
-                <SelectItem value="shellcode">Shellcode</SelectItem>
+                <SelectItem value=".exe">Executable (.exe)</SelectItem>
+                <SelectItem value=".dll">DLL</SelectItem>
               </SelectContent>
             </Select>
           </div>

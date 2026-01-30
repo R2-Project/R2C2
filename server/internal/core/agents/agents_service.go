@@ -1,9 +1,11 @@
 package agents
 
 import (
+	"regexp"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/mati-olivera/R2C2/internal/core/logger"
 )
 
 type AgentsService struct {
@@ -16,23 +18,38 @@ func NewAgentsService(sessionsRepo SessionsRepository) *AgentsService {
 	}
 }
 
-func (as *AgentsService) CreateAgent(data NewAgentRequest) (*Agent, error) {
+func (as *AgentsService) CreateAgent(data NewAgentRequest) (*string, error) {
+
+	re := regexp.MustCompile(`[^a-zA-Z0-9\s]`)
+	if re.MatchString(data.Name) {
+		return nil, ErrInvalidAgentName
+	}
+
+	if data.Format != ".exe" && data.Format != ".dll" {
+		return nil, ErrInvalidAgentFormat
+	}
 
 	shortUUID := uuid.New().String()[:8]
 	agent := &Agent{
 		Id:        shortUUID,
 		Name:      data.Name,
 		Listener:  data.Listener, // might populate this data later
-		Status:    "inactive",    // TODO:
+		Status:    "inactive",
 		Arch:      data.Arch,
 		Format:    data.Format,
 		Timestamp: time.Now().Unix(),
 	}
 
-	err := as.SessionsRepository.SaveSession(agent)
+	binaryPath, err := agent.Build()
+	if err != nil {
+		logger.Error("Failed to build agent binary", err)
+		return nil, err
+	}
+
+	err = as.SessionsRepository.SaveSession(agent)
 	if err != nil {
 		return nil, err
 	}
 
-	return agent, nil
+	return binaryPath, nil
 }

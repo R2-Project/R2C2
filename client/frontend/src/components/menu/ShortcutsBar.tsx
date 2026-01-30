@@ -17,6 +17,7 @@ export type ShortcutItem = {
   badge?: number
   icon?: React.ReactNode
   component?: string
+  disabled?: boolean
 }
 
 type Props = {
@@ -64,19 +65,10 @@ export default function ShortcutsBar({ items, className, onAddView, activeCompon
       onClick: () => onAddView?.('networkMap', 'Network Map', 'bottomTabset'),
     },
     {
-      id: "tasks",
-      label: "Tasks",
-      icon: <ListTodo />,
-    },
-    {
-      id: "tunnels",
-      label: "Tunnels",
-      icon: <Route />,
-    },
-    {
       id: "loot",
       label: "Loot",
       icon: <Gem />,
+      disabled: true,
     },
   ]
 
@@ -96,13 +88,13 @@ export default function ShortcutsBar({ items, className, onAddView, activeCompon
                 const isActive = it.component && activeComponents.includes(it.component);
                 const trigger = (
                   <button
-                    onClick={it.onClick}
+                    disabled={it.disabled}
                     aria-label={it.label}
                     className={`relative flex items-center justify-center w-10 h-10 rounded-md transition ${
                       isActive 
                         ? "bg-primary text-primary-foreground hover:bg-primary/90" 
                         : "text-slate-200 dark:text-slate-200 hover:bg-slate-900 dark:hover:bg-slate-800"
-                    }`}
+                    } ${it.disabled ? "opacity-50 cursor-not-allowed" : ""}`}
                     type="button"
                   >
                     <span className="pointer-events-none">{it.icon}</span>
