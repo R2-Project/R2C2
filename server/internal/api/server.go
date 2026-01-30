@@ -231,12 +231,22 @@ func StartServer(port int) error {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
 			return
 		}
-		agent, err := agentsService.CreateAgent(agentData)
+
+		// FIXME:
+		// listener, err := listenersService.GetListenerById(agentData.Listener)
+		// if err != nil {
+		// 	c.JSON(http.StatusBadRequest, gin.H{"error": "Listener not found"})
+		// 	return
+		// }
+
+		// GET LISTENER ADDRESS AND PORT FOR BUILD
+
+		binaryPath, err := agentsService.CreateAgent(agentData)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusCreated, agent)
+		c.JSON(http.StatusCreated, binaryPath)
 	})
 
 	router.GET("/loot", HttpAuth(config.GetConfig().JWTSecret, *operatorsRepository), func(c *gin.Context) {

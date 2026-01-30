@@ -28,7 +28,7 @@ export default function NewListener({ open, onOpenChange, onCreated }: Props) {
   const [listenerType, setListenerType] = useState("http")
   const [useSSL, setUseSSL] = useState(false)
   const [headersText, setHeadersText] = useState("Content-Type: application/json")
-  const [uris, setUrisText] = useState("/index.php")
+  const [uris, setUrisText] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -89,7 +89,7 @@ export default function NewListener({ open, onOpenChange, onCreated }: Props) {
         setListenerType("http")
         setUseSSL(false)
         setHeadersText("Content-Type: application/json")
-        setUrisText("/index.php")
+        setUrisText("")
         onCreated?.()
         // close after a short delay so user sees success
         setTimeout(() => onOpenChange(false), 600)
@@ -178,6 +178,7 @@ export default function NewListener({ open, onOpenChange, onCreated }: Props) {
                   id="use-ssl"
                   checked={useSSL}
                   onCheckedChange={(v) => setUseSSL(Boolean(v))}
+                  disabled
                 />
                 <label htmlFor="use-ssl" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                   Use SSL
@@ -207,6 +208,7 @@ export default function NewListener({ open, onOpenChange, onCreated }: Props) {
                   rows={4}
                   value={uris}
                   onChange={(e) => setUrisText(e.target.value)}
+                  disabled
                 />
               </FormControl>
               <FormMessage />

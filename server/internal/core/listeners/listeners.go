@@ -86,3 +86,13 @@ func (l *ListenersService) CreateHttpListener(request NewHttpListenerRequest) (*
 func (l *ListenersService) GetListeners() *[]Listener {
 	return l.listenerRepository.GetListeners()
 }
+
+func (l *ListenersService) GetListenerById(id string) (*Listener, error) {
+	listeners := l.listenerRepository.GetListeners()
+	for _, listener := range *listeners {
+		if listener.Id == id {
+			return &listener, nil
+		}
+	}
+	return nil, fmt.Errorf("Listener with ID %s not found", id)
+}
