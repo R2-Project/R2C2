@@ -68,15 +68,17 @@ func (h *HttpListener) Start() error {
 		c.String(404, "Not Found")
 	})
 
-	if len(h.Uris) == 0 {
-		// if no URIs specified, use root
-		router.Any("/", h.handleRequest)
-	} else {
-		for _, uri := range h.Uris {
-			path := "/" + strings.TrimLeft(uri, "/")
-			router.Any(path, h.handleRequest)
-		}
-	}
+	// TODO: must implement URI cycling on beacon
+	router.Any("/", h.handleRequest)
+	// if len(h.Uris) == 0 {
+	// 	// if no URIs specified, use root
+	// 	router.Any("/", h.handleRequest)
+	// } else {
+	// 	for _, uri := range h.Uris {
+	// 		path := "/" + strings.TrimLeft(uri, "/")
+	// 		router.Any(path, h.handleRequest)
+	// 	}
+	// }
 
 	port := strconv.Itoa(h.Port)
 
