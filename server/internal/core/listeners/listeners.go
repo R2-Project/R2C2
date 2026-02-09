@@ -17,6 +17,22 @@ type Listener struct {
 	Protocol string `json:"protocol"`
 }
 
+func (l *Listener) GetAddress() (string, error) {
+	if l.Protocol == "http" {
+		var config struct {
+			Host string `json:"host"`
+			Port int    `json:"port"`
+		}
+		err := json.Unmarshal([]byte(l.Config), &config)
+		if err != nil {
+			return "", fmt.Errorf("Failed to unmarshal listener config: %w", err)
+		}
+		return fmt.Sprintf("http://%s:%d", config.Host, config.Port), nil
+	}
+	// TODO: add support for other protocols
+	return "", fmt.Errorf("Unsupported protocol: %s", l.Protocol)
+}
+
 type ListenersRepository interface {
 	GetListeners() *[]Listener
 	SaveListener(listener *Listener) error
