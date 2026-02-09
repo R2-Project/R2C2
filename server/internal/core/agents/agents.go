@@ -61,10 +61,10 @@ func (a *Agent) Build() (*string, error) {
 		"LISTENER_ADDRESS="+a.Listener,
 		"SESSION_ID="+a.Id,
 	)
-	cmd.Dir = "./implant"
+	cmd.Dir = "../../../../implant"
 
 	if output, err := cmd.CombinedOutput(); err != nil {
-		return nil, fmt.Errorf("compilation failed: %s", string(output))
+		return nil, fmt.Errorf("compilation failed out: %s - err: %w", string(output), err)
 	}
 
 	binaryPath := "./implant/target/" + target + "/release/implant" + a.Format

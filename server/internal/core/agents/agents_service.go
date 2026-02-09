@@ -33,7 +33,7 @@ func (as *AgentsService) CreateAgent(data NewAgentRequest) (*string, error) {
 	agent := &Agent{
 		Id:        shortUUID,
 		Name:      data.Name,
-		Listener:  data.Listener, // might populate this data later
+		Listener:  data.Listener,
 		Status:    "inactive",
 		Arch:      data.Arch,
 		Format:    data.Format,

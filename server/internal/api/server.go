@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -232,14 +233,21 @@ func StartServer(port int) error {
 			return
 		}
 
-		// FIXME:
-		// listener, err := listenersService.GetListenerById(agentData.Listener)
-		// if err != nil {
-		// 	c.JSON(http.StatusBadRequest, gin.H{"error": "Listener not found"})
-		// 	return
-		// }
+		listener, err := listenersService.GetListenerById(agentData.Listener)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Listener not found"})
+			return
+		}
 
-		// GET LISTENER ADDRESS AND PORT FOR BUILD
+		address, err := listener.GetAddress()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get listener address"})
+			return
+		}
+
+		fmt.Println("Listener address:", address)
+
+		agentData.Listener = address
 
 		binaryPath, err := agentsService.CreateAgent(agentData)
 		if err != nil {

@@ -110,7 +110,7 @@ export default function NewAgent({ open, onOpenChange, onCreated }: Props) {
       const selectedListener = listeners.find(l => l.id === listenerId);
       const payload = {
         name,
-        listener: `${selectedListener?.protocol} - ${selectedListener?.name}`,
+        listener: selectedListener.id,
         arch,
         format,
         os
