@@ -105,4 +105,9 @@ var CommandsRegistry = []CommandDefinition{
 		Description: "Take a screenshot of the current screen",
 		Usage:       "screenshot",
 	},
+	{
+		Name:        "kill",
+		Description: "Kill a process by its PID",
+		Usage:       "kill",
+	},
 }
