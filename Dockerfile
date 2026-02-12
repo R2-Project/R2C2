@@ -29,14 +29,14 @@ COPY --from=builder /app/server/teamserver ./teamserver
 
 COPY implant/ ./implant/
 
-RUN mkdir -p ./loot ./db ./config
+RUN mkdir -p ./loot ./db ./config /tmp/payloads
 
 COPY config.yaml ./config.yaml
 
-VOLUME ["./config.yaml", "./loot", "./db"]
+
+VOLUME ["./config.yaml", "./loot", "./db", "/tmp/payloads"]
 
 ENV GIN_MODE=release
+ENV IMPLANT_SOURCE_PATH=/app/implant
 
-EXPOSE 8080
-
-# ENTRYPOINT ["./teamserver", "server", "--start", "--config", "./config.yaml"]
+ENTRYPOINT ["./teamserver", "server", "--start", "--config", "./config.yaml"]

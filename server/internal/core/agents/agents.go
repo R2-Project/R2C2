@@ -61,7 +61,7 @@ func (a *Agent) Build() (*string, error) {
 	implantDir := os.Getenv("IMPLANT_SOURCE_PATH")
 	if implantDir == "" {
 		// for test
-		implantDir = "../../../../implant"
+		implantDir = "../implant"
 	}
 
 	cmd := exec.Command("cargo", "build", "--features", "http", "--release", "--target", target)
@@ -78,17 +78,17 @@ func (a *Agent) Build() (*string, error) {
 
 	binaryPath := filepath.Join(implantDir, "target", target, "release", "implant"+a.Format)
 
-	err := os.MkdirAll("./agents", os.ModePerm)
+	err := os.MkdirAll("/tmp/payloads", os.ModePerm)
 	if err != nil {
 		return nil, err
 	}
 
-	err = os.Rename(binaryPath, "./agents/"+a.Name+a.Format)
+	err = os.Rename(binaryPath, "/tmp/payloads/"+a.Name+a.Format)
 	if err != nil {
 		return nil, err
 	}
 
-	agentPath := "./agents/" + a.Name + a.Format
+	agent := a.Name + a.Format
 
-	return &agentPath, nil
+	return &agent, nil
 }

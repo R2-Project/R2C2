@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { Loader2 } from "lucide-react"
+import { Loader2, Download } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -13,6 +13,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { ApiRequest } from '@/lib/api';
+// @ts-ignore
+import { Download as DownloadAgent, SelectSavePath, DownloadToFile } from "../../../wailsjs/go/main/App";
 
 type Props = {
   open: boolean
@@ -127,7 +129,8 @@ export default function NewAgent({ open, onOpenChange, onCreated }: Props) {
         let resultPath = response.body;
         try {
             const data = JSON.parse(response.body);
-            resultPath = data.path || data.file_path || data.filepath || resultPath;
+            // Prioritize 'file' as per latest server change, fallbacks for older formats
+            resultPath = data.file || data.path || data.file_path || data.filepath || resultPath;
         } catch (e) {
             // use raw body
         }
@@ -144,6 +147,47 @@ export default function NewAgent({ open, onOpenChange, onCreated }: Props) {
       setError(e?.message || "Failed to generate agent")
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleDownload() {
+    if (!createdPath) return;
+
+    try {
+      let serverUrl = localStorage.getItem("serverUrl");
+      const token = localStorage.getItem("token");
+
+      if (!serverUrl) return;
+
+      if(!serverUrl.includes("http")) {
+        serverUrl = `http://${serverUrl}`;
+      }
+
+      const headers: any = token ? { "Authorization": `Bearer ${token}` } : {};
+      
+      const fileName = (createdPath.split(/[\\/]/).pop() || createdPath).replace(/"/g, "");
+      const downloadPath = await SelectSavePath(fileName);
+      
+      if (!downloadPath) {
+          // User cancelled
+          return;
+      }
+
+      const downloadUrl = `${serverUrl}/agents/download?name=${fileName}`;
+      
+      setLoading(true); // Reuse loading state or add a new one? Reuse for now but be careful it doesn't close dialog logic
+      try {
+        await DownloadToFile(downloadUrl, downloadPath, headers);
+        setSuccess(`Agent saved to ${downloadPath}`);
+      } catch (err: any) {
+        throw new Error(err);
+      } finally {
+        setLoading(false);
+      }
+
+    } catch(e) {
+        console.error(e);
+        setError("Failed to download file: " + e);
     }
   }
 
@@ -224,22 +268,24 @@ export default function NewAgent({ open, onOpenChange, onCreated }: Props) {
 
           {error && <div className="text-sm text-destructive">{error}</div>}
           {success && <div className="text-sm text-green-600">{success}</div>}
-          {createdPath && (
-            <div className="rounded-md bg-secondary/50 p-3 mt-2">
-              <p className="text-xs text-muted-foreground mb-1">Agent saved to:</p>
-              <code className="text-sm break-all">{createdPath}</code>
-            </div>
-          )}
         </div>
 
         <div className="flex justify-end gap-2">
+          {createdPath && (
+             <Button variant="outline" onClick={handleDownload}>
+                <Download className="mr-2 h-4 w-4" />
+                Download Payload {createdPath.split(/[\\/]/).pop()}
+             </Button>
+          )}
           <Button variant="secondary" onClick={() => onOpenChange(false)} disabled={loading}>
             {success ? "Close" : "Cancel"}
           </Button>
-          <Button onClick={handleCreate} disabled={loading}>
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {loading ? "Generating..." : "Generate Agent"}
-          </Button>
+          {!success && (
+            <Button onClick={handleCreate} disabled={loading}>
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {loading ? "Generating..." : "Generate Agent"}
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>

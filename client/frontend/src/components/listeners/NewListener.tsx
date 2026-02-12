@@ -172,6 +172,7 @@ export default function NewListener({ open, onOpenChange, onCreated }: Props) {
               <FormMessage />
             </FormItem>
 
+            {/*
             <FormItem>
               <div className="flex items-center gap-2">
                 <Checkbox
@@ -186,7 +187,7 @@ export default function NewListener({ open, onOpenChange, onCreated }: Props) {
               </div>
               <FormMessage />
             </FormItem>
-
+      */}
             <FormItem>
               <FormLabel>Response Headers</FormLabel>
               <FormControl>
@@ -200,6 +201,7 @@ export default function NewListener({ open, onOpenChange, onCreated }: Props) {
               <FormMessage />
             </FormItem>
 
+            {/* 
             <FormItem>
               <FormLabel>URIs</FormLabel>
               <FormControl>
@@ -213,6 +215,7 @@ export default function NewListener({ open, onOpenChange, onCreated }: Props) {
               </FormControl>
               <FormMessage />
             </FormItem>
+          */}
           </Form>
 
           {error && <div className="text-sm text-destructive">{error}</div>}
