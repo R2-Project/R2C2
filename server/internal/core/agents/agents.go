@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 )
 
 type NewAgentRequest struct {
@@ -52,8 +53,13 @@ type Agent struct {
 
 func (a *Agent) Build() (*string, error) {
 
-	// TODO: make this dynamic
-	target := "x86_64-unknown-linux-gnu"
+	target := "x86_64-pc-windows-gnu"
+
+	implantDir := os.Getenv("IMPLANT_SOURCE_PATH")
+	if implantDir == "" {
+		// for test
+		implantDir = "../../../../implant"
+	}
 
 	cmd := exec.Command("cargo", "build", "--features", "http", "--release", "--target", target)
 
@@ -61,15 +67,20 @@ func (a *Agent) Build() (*string, error) {
 		"LISTENER_ADDRESS="+a.Listener,
 		"SESSION_ID="+a.Id,
 	)
-	cmd.Dir = "../../../../implant"
+	cmd.Dir = implantDir
 
 	if output, err := cmd.CombinedOutput(); err != nil {
 		return nil, fmt.Errorf("compilation failed out: %s - err: %w", string(output), err)
 	}
 
-	binaryPath := "./implant/target/" + target + "/release/implant" + a.Format
+	binaryPath := filepath.Join(implantDir, "target", target, "release", "implant"+a.Format)
 
-	err := os.Rename(binaryPath, "./agents/"+a.Name+a.Format)
+	err := os.MkdirAll("./agents", os.ModePerm)
+	if err != nil {
+		return nil, err
+	}
+
+	err = os.Rename(binaryPath, "./agents/"+a.Name+a.Format)
 	if err != nil {
 		return nil, err
 	}

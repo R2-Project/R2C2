@@ -245,8 +245,6 @@ func StartServer(port int) error {
 			return
 		}
 
-		fmt.Println("Listener address:", address)
-
 		agentData.Listener = address
 
 		binaryPath, err := agentsService.CreateAgent(agentData)
