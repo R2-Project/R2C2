@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -29,6 +30,7 @@ export default function NewAgent({ open, onOpenChange, onCreated }: Props) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [createdPath, setCreatedPath] = useState<string | null>(null)
 
   useEffect(() => {
     if (open) {
@@ -82,6 +84,7 @@ export default function NewAgent({ open, onOpenChange, onCreated }: Props) {
   async function handleCreate() {
     setError(null)
     setSuccess(null)
+    setCreatedPath(null)
 
     if (!name.trim()) {
       setError("Name is required")
@@ -120,11 +123,19 @@ export default function NewAgent({ open, onOpenChange, onCreated }: Props) {
       
       if (response.statusCode >= 200 && response.statusCode < 300) {
         setSuccess("Agent created successfully")
+        
+        let resultPath = response.body;
+        try {
+            const data = JSON.parse(response.body);
+            resultPath = data.path || data.file_path || data.filepath || resultPath;
+        } catch (e) {
+            // use raw body
+        }
+        setCreatedPath(resultPath);
+
         setName("")
         // optionally reset other fields
         onCreated?.()
-        // close after a short delay so user sees success
-        setTimeout(() => onOpenChange(false), 600)
       } else {
         throw new Error(response.error || `Failed to create agent: ${response.statusCode}`);
       }
@@ -213,13 +224,20 @@ export default function NewAgent({ open, onOpenChange, onCreated }: Props) {
 
           {error && <div className="text-sm text-destructive">{error}</div>}
           {success && <div className="text-sm text-green-600">{success}</div>}
+          {createdPath && (
+            <div className="rounded-md bg-secondary/50 p-3 mt-2">
+              <p className="text-xs text-muted-foreground mb-1">Agent saved to:</p>
+              <code className="text-sm break-all">{createdPath}</code>
+            </div>
+          )}
         </div>
 
         <div className="flex justify-end gap-2">
           <Button variant="secondary" onClick={() => onOpenChange(false)} disabled={loading}>
-            Cancel
+            {success ? "Close" : "Cancel"}
           </Button>
           <Button onClick={handleCreate} disabled={loading}>
+            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {loading ? "Generating..." : "Generate Agent"}
           </Button>
         </div>

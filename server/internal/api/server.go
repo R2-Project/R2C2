@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -164,6 +163,16 @@ func StartServer(port int) error {
 
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Unsupported protocol"})
 		return
+	})
+
+	router.DELETE("/listeners/:id", HttpAuth(config.GetConfig().JWTSecret, *operatorsRepository), func(c *gin.Context) {
+		id := c.Param("id")
+		err := listenersService.DeleteListener(id)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"message": "Listener deleted"})
 	})
 
 	router.POST("/tasks", HttpAuth(config.GetConfig().JWTSecret, *operatorsRepository), func(c *gin.Context) {
