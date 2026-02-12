@@ -40,3 +40,9 @@ func (lr *ListenersRepository) GetListeners() *[]listeners.Listener {
 	}
 	return &listenersList
 }
+
+func (ls *ListenersRepository) DeleteListener(id string) error {
+	query := `DELETE FROM listeners WHERE id = ?`
+	_, err := ls.db.Exec(query, id)
+	return err
+}

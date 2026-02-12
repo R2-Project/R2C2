@@ -51,6 +51,9 @@ type Agent struct {
 	// Uris      []string `json:"uris"`
 }
 
+// TODO:
+// will fix this later to make it malleable
+// for now just need to automate the build process
 func (a *Agent) Build() (*string, error) {
 
 	target := "x86_64-pc-windows-gnu"

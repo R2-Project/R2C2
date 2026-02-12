@@ -36,6 +36,7 @@ func (l *Listener) GetAddress() (string, error) {
 type ListenersRepository interface {
 	GetListeners() *[]Listener
 	SaveListener(listener *Listener) error
+	DeleteListener(id string) error
 }
 
 func NewListenersService(listenersRepository ListenersRepository, taskManager *tasks.TaskManager, sessions *agents.SessionsService) *ListenersService {
@@ -50,6 +51,7 @@ type ListenersService struct {
 	listenerRepository ListenersRepository
 	taskManager        *tasks.TaskManager
 	sessionsService    *agents.SessionsService
+	listeners          map[string]*HttpListener
 }
 
 func (l *ListenersService) CreateHttpListener(request NewHttpListenerRequest) (*HttpListener, error) {
@@ -91,6 +93,8 @@ func (l *ListenersService) CreateHttpListener(request NewHttpListenerRequest) (*
 		return nil, fmt.Errorf("Failed to save listener: %w", err)
 	}
 
+	l.listeners[listener.Id] = httpListener
+
 	err = httpListener.Start()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to start HTTP listener: %w", err)
@@ -111,4 +115,20 @@ func (l *ListenersService) GetListenerById(id string) (*Listener, error) {
 		}
 	}
 	return nil, fmt.Errorf("Listener with ID %s not found", id)
+}
+
+func (l *ListenersService) DeleteListener(id string) error {
+
+	listener, err := l.GetListenerById(id)
+	if err != nil {
+		return fmt.Errorf("Failed to get listener: %w", err)
+	}
+	l.listeners[listener.Id].Stop()
+
+	err = l.listenerRepository.DeleteListener(id)
+	if err != nil {
+		return fmt.Errorf("Failed to delete listener: %w", err)
+	}
+
+	return nil
 }
