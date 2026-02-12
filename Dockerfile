@@ -39,4 +39,4 @@ ENV GIN_MODE=release
 
 EXPOSE 8080
 
-ENTRYPOINT ["./teamserver", "server", "--config", "./config.yaml"]
+# ENTRYPOINT ["./teamserver", "server", "--start", "--config", "./config.yaml"]
