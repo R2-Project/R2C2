@@ -33,6 +33,21 @@ func (a *App) Request(method string, url string, headers map[string]string, body
 	return networking.Request(method, url, headers, body)
 }
 
+func (a *App) Download(url string, headers map[string]string) (string, error) {
+	return networking.Download(url, headers)
+}
+
+func (a *App) DownloadToFile(url string, filePath string, headers map[string]string) error {
+	return networking.DownloadToFile(url, filePath, headers)
+}
+
+func (a *App) SelectSavePath(filename string) (string, error) {
+	return runtime.SaveFileDialog(a.ctx, runtime.SaveDialogOptions{
+		DefaultFilename: filename,
+		Title:           "Save Agent Payload",
+	})
+}
+
 func (a *App) ListenC2Events(secureConn *networking.SecureWebSocket) {
 	fmt.Println("Starting C2 Event Listener...")
 	for {

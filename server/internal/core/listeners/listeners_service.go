@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/mati-olivera/R2C2/internal/core/agents"
+	"github.com/mati-olivera/R2C2/internal/core/logger"
 	"github.com/mati-olivera/R2C2/internal/core/tasks"
 )
 
@@ -44,6 +45,7 @@ func NewListenersService(listenersRepository ListenersRepository, taskManager *t
 		listenerRepository: listenersRepository,
 		taskManager:        taskManager,
 		sessionsService:    sessions,
+		listeners:          make(map[string]*HttpListener),
 	}
 }
 
@@ -129,6 +131,10 @@ func (l *ListenersService) DeleteListener(id string) error {
 	if err != nil {
 		return fmt.Errorf("Failed to delete listener: %w", err)
 	}
+
+	address, _ := listener.GetAddress()
+
+	logger.Info("Listener %s deleted", listener.Name, "address", address)
 
 	return nil
 }
