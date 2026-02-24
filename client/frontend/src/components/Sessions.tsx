@@ -1,8 +1,20 @@
 import { useEffect, useState } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { ApiRequest } from "@/lib/api"
 import { EventsOn } from "../../wailsjs/runtime/runtime"
+import { Trash2 } from "lucide-react"
 
 interface Session {
   id: string
@@ -31,6 +43,7 @@ export default function Component({ onOpenSession }: SessionsProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [now, setNow] = useState(Date.now())
+  const [sessionToDelete, setSessionToDelete] = useState<string | null>(null)
 
   useEffect(() => {
     fetchSessions()
@@ -111,6 +124,41 @@ export default function Component({ onOpenSession }: SessionsProps) {
       return "unhealthy";
   }
 
+  function handleDeleteClick(sessionId: string, e: React.MouseEvent) {
+    e.stopPropagation();
+    setSessionToDelete(sessionId);
+  }
+
+  async function confirmDelete() {
+    if (!sessionToDelete) return;
+
+    try {
+      let serverUrl = localStorage.getItem("serverUrl");
+      const token = localStorage.getItem("token");
+
+      if (!serverUrl) {
+         throw new Error("Server URL not found");
+      }
+      if(!serverUrl.includes("http")) {
+        serverUrl = `http://${serverUrl}`;
+      }
+
+      const headers = token ? { "Authorization": `Bearer ${token}` } : {};
+      const response = await ApiRequest("DELETE", `${serverUrl}/sessions/${sessionToDelete}`, headers, "");
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        setSessions(prev => prev.filter(s => s.id !== sessionToDelete));
+      } else {
+        throw new Error(response.error || `Failed to delete session: ${response.statusCode}`);
+      }
+    } catch (e: any) {
+       setError(e?.message || "Failed to delete session");
+       console.error(e);
+    } finally {
+      setSessionToDelete(null);
+    }
+  }
+
   async function fetchSessions() {
     setLoading(true)
     setError(null)
@@ -165,6 +213,7 @@ export default function Component({ onOpenSession }: SessionsProps) {
               <TableHead>PID</TableHead>
               <TableHead>Arch</TableHead>
               <TableHead>Last ping</TableHead>
+              <TableHead className="w-[50px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -201,11 +250,21 @@ export default function Component({ onOpenSession }: SessionsProps) {
                     {formatLastPing(item.last_ping)}
                   </span>
                 </TableCell>
+                <TableCell>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-100"
+                        onClick={(e) => handleDeleteClick(item.id, e)}
+                    >
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
+                </TableCell>
               </TableRow>
             )})}
             {sessions.length === 0 && !loading && (
               <TableRow>
-                <TableCell colSpan={10} className="text-center text-muted-foreground h-24">
+                <TableCell colSpan={12} className="text-center text-muted-foreground h-24">
                   No sessions found
                 </TableCell>
               </TableRow>
@@ -213,6 +272,30 @@ export default function Component({ onOpenSession }: SessionsProps) {
           </TableBody>
         </Table>
       </div>
+
+      <AlertDialog open={!!sessionToDelete} onOpenChange={(open) => !open && setSessionToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the session
+              and remove its data from the server.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={(e) => {
+                e.stopPropagation();
+                confirmDelete();
+              }}
+              className="bg-red-500 hover:bg-red-600 text-white"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

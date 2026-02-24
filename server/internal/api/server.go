@@ -1,13 +1,13 @@
 package api
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -266,6 +266,16 @@ func StartServer(port int) error {
 		c.JSON(http.StatusCreated, gin.H{"file": fileName})
 	})
 
+	router.DELETE("/sessions/:id", HttpAuth(config.GetConfig().JWTSecret, *operatorsRepository), func(c *gin.Context) {
+		id := c.Param("id")
+		err := sessionsService.DeleteSession(id)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"message": "Agent deleted"})
+	})
+
 	router.GET("/agents/download", HttpAuth(config.GetConfig().JWTSecret, *operatorsRepository), func(c *gin.Context) {
 		agentName := c.Query("name")
 
@@ -290,28 +300,36 @@ func StartServer(port int) error {
 		c.File(filePath)
 	})
 
-	router.GET("/loot", HttpAuth(config.GetConfig().JWTSecret, *operatorsRepository), func(c *gin.Context) {
+	router.GET("/loot/screenshots", HttpAuth(config.GetConfig().JWTSecret, *operatorsRepository), func(c *gin.Context) {
 		lootDir := config.GetConfig().LootPath
 		screenshots, err := os.ReadDir(lootDir + "/screenshots")
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-
-		loot := map[string][]string{
-			"screenshots": {},
-		}
-		for _, file := range screenshots {
-			data, err := os.ReadFile(lootDir + "/screenshots/" + file.Name())
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-				return
+		var filenames []string
+		for _, f := range screenshots {
+			if !f.IsDir() && strings.HasSuffix(f.Name(), ".png") {
+				filenames = append(filenames, f.Name())
 			}
-			base64Data := base64.StdEncoding.EncodeToString(data)
-			loot["screenshots"] = append(loot["screenshots"], string(base64Data))
 		}
-		c.JSON(http.StatusOK, loot)
 
+		c.JSON(200, filenames)
+	})
+
+	router.GET("/loot/screenshots/:name", HttpAuth(config.GetConfig().JWTSecret, *operatorsRepository), func(c *gin.Context) {
+		requestedFile := c.Param("name")
+
+		lootDir := config.GetConfig().LootPath
+		safeFilename := filepath.Base(requestedFile)
+		fullPath := filepath.Join(lootDir, "screenshots", safeFilename)
+
+		if _, err := os.Stat(fullPath); os.IsNotExist(err) {
+			c.JSON(404, gin.H{"error": "Screenshot not found"})
+			return
+		}
+
+		c.File(fullPath)
 	})
 
 	sport := strconv.Itoa(port)

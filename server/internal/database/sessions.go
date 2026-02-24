@@ -66,3 +66,8 @@ func (r *SessionsRepository) GetSession(agentId string) (*agents.Agent, error) {
 	}
 	return &agent, nil
 }
+
+func (r *SessionsRepository) DeleteSession(agentId string) error {
+	_, err := r.db.Exec("DELETE FROM sessions WHERE id = ?", agentId)
+	return err
+}

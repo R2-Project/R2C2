@@ -68,7 +68,8 @@ export default function ShortcutsBar({ items, className, onAddView, activeCompon
       id: "loot",
       label: "Loot",
       icon: <Gem />,
-      disabled: true,
+      component: "loot",
+      onClick: () => onAddView?.('loot', 'Loot', 'bottomTabset'),
     },
   ]
 
@@ -88,6 +89,7 @@ export default function ShortcutsBar({ items, className, onAddView, activeCompon
                 const isActive = it.component && activeComponents.includes(it.component);
                 const trigger = (
                   <button
+                    onClick={it.onClick}
                     disabled={it.disabled}
                     aria-label={it.label}
                     className={`relative flex items-center justify-center w-10 h-10 rounded-md transition ${
