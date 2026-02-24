@@ -56,3 +56,7 @@ func (s *SessionsService) UpdateSleep(agentId string, sleep int, jitter int) err
 
 	return s.repo.SaveSession(agent)
 }
+
+func (s *SessionsService) DeleteSession(agentId string) error {
+	return s.repo.DeleteSession(agentId)
+}

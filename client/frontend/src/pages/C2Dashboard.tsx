@@ -7,10 +7,11 @@ import NetworkMap from '@/components/NetworkMap';
 import Listeners from '@/components/listeners/Listeners';
 import AIChatbot from '@/components/AIChatbot';
 import Logs from '@/components/Logs';
+import Loot from '@/components/Loot';
 import Session from '@/components/Session';
 import 'flexlayout-react/style/dark.css';
 import ShortcutsBar from '@/components/menu/ShortcutsBar';
-import { Headphones, Network, Users, Bot, X, Maximize2, Minimize2, ChevronDown, HatGlasses, FileText, Plus, Terminal } from "lucide-react"
+import { Headphones, Network, Users, Bot, X, Maximize2, Minimize2, ChevronDown, HatGlasses, FileText, Plus, Terminal, Gem } from "lucide-react"
 
 const jsonModel: IJsonModel = {
   global: {
@@ -108,6 +109,8 @@ export default function C2Dashboard() {
         return <AIChatbot />;
       case 'logs':
         return <Logs />;
+      case 'loot':
+        return <Loot />;
       case 'session':
         // Extract session ID from node config if available
         const config = node.getConfig();
@@ -136,9 +139,11 @@ export default function C2Dashboard() {
       case 'session':
         Icon = Terminal;
         break;
-        break;
       case 'logs':
         Icon = FileText;
+        break;
+      case 'loot':
+        Icon = Gem;
         break;
     }
 
