@@ -1,63 +1,42 @@
+.PHONY: all server client implant deps-server deps-client deps-implant clean help
 
-DOCKER_IMAGE_NAME := r2c2
-CLIENT_DIR := client
-CLIENT_OUTPUT_NAME := R2C2
-
-OS := $(shell uname -s)
-ifeq ($(OS),Darwin)
-	DEFAULT_CLIENT_TARGET := client-macos
-else ifeq ($(OS),Linux)
-	DEFAULT_CLIENT_TARGET := client-linux
-else
-	DEFAULT_CLIENT_TARGET := client-windows
-endif
-
-.PHONY: all help build server client client-windows client-linux client-macos docker-build clean
-
-all: docker-build $(DEFAULT_CLIENT_TARGET)
+all: server client implant
 
 help:
-	@echo "R2C2 Build System"
-	@echo ""
-	@echo "Usage:"
-	@echo "  make all             - Build Docker server and Client for current OS"
-	@echo "  make server          - Build the Server Docker image"
-	@echo "  make client          - Build Client for the current OS"
-	@echo "  make client-windows  - Build Client for Windows (amd64)"
-	@echo "  make client-linux    - Build Client for Linux (amd64)"
-	@echo "  make client-macos    - Build Client for macOS (Universal)"
-	@echo "  make clean           - Remove build artifacts"
-	@echo ""
+	@echo "Available commands:"
+	@echo "  make all          - Build server and client"
+	@echo "  make server       - Install dependencies and build the server (includes implant deps)"
+	@echo "  make client       - Install dependencies and build the client"
+	@echo "  make deps-server  - Install Go dependencies for the server"
+	@echo "  make deps-client  - Install Go and NPM dependencies for the client"
+	@echo "  make deps-implant - Install Rust dependencies for the implant"
+	@echo "  make clean        - Clean build artifacts"
 
-build:
-	@echo "Starting build process..."
+server: deps-server deps-implant
+	@echo "Building Server..."
+	cd server && go build -o ../bin/server ./cmd/main.go
 
-server: docker-build
+client: deps-client
+	@echo "Building Client..."
+	cd client && wails build
 
-client: $(DEFAULT_CLIENT_TARGET)
+deps-server:
+	@echo "Downloading Server Go modules..."
+	cd server && go mod download
 
+deps-client:
+	@echo "Downloading Client Go modules..."
+	cd client && go mod download
+	@echo "Installing Client Frontend dependencies..."
+	cd client/frontend && npm install
 
-docker-build:
-	@echo "🐳 Building Server Docker Image: $(DOCKER_IMAGE_NAME)..."
-	docker build -t $(DOCKER_IMAGE_NAME) .
-	@echo "✅ Docker build complete."
-
-client-macos:
-	@echo "🍎 Building Client for macOS (Universal)..."
-	cd $(CLIENT_DIR) && wails build -platform darwin/universal
-	@echo "✅ Client (macOS) build complete."
-
-client-windows:
-	@echo "🪟 Building Client for Windows (amd64)..."
-	cd $(CLIENT_DIR) && wails build -platform windows/amd64
-	@echo "✅ Client (Windows) build complete."
-
-client-linux:
-	@echo "🐧 Building Client for Linux (amd64)..."
-	cd $(CLIENT_DIR) && wails build -platform linux/amd64
-	@echo "✅ Client (Linux) build complete."
+deps-implant:
+	@echo "Fetching Implant Cargo dependencies..."
+	cd implant && cargo fetch
 
 clean:
-	@echo "🧹 Cleaning up..."
-	cd $(CLIENT_DIR) && rm -rf build/bin/*
-	@echo "✅ Clean complete."
+	@echo "Cleaning up..."
+	rm -rf bin
+	cd server && go clean
+	cd client && rm -rf build/bin
+	cd implant && cargo clean
