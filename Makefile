@@ -15,18 +15,15 @@ help:
 
 check-deps:
 	@echo "Checking system dependencies..."
+	sudo apt-get install libc6-dev
+	sudo apt-get install gcc-multili
 	@command -v go >/dev/null 2>&1 || { echo "Installing Go..."; sudo apt-get update && sudo apt-get install -y golang-go; }
 	@command -v cargo >/dev/null 2>&1 || { echo "Installing Rust..."; curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y; source $$HOME/.cargo/env; }
-	@command -v npm >/dev/null 2>&1 || { echo "Installing Node.js/NPM..."; sudo apt-get install -y nodejs npm; }
-	@command -v wails >/dev/null 2>&1 || { echo "Installing Wails..."; go install github.com/wailsapp/wails/v2/cmd/wails@latest; export PATH=$$PATH:$$HOME/go/bin; }
-	@echo "Checking Linux specific dependencies for Wails..."
-	@dpkg -s libgtk-3-dev >/dev/null 2>&1 || { echo "Installing GTK3..."; sudo apt-get install -y libgtk-3-dev; }
-	@dpkg -s libwebkit2gtk-4.1-dev >/dev/null 2>&1 || { echo "Installing WebKit2GTK..."; sudo apt-get install -y libwebkit2gtk-4.1-dev; }
-
 
 server: check-deps deps-server deps-implant
 	@echo "Building Server..."
 	cd server && go build -o ../bin/server ./cmd/main.go
+	@echo "[+] Server built at bin/server"
 
 client: check-deps deps-client
 	@echo "Building Client..."
@@ -37,6 +34,11 @@ deps-server:
 	cd server && go mod download
 
 deps-client:
+	@command -v npm >/dev/null 2>&1 || { echo "Installing Node.js/NPM..."; sudo apt-get install -y nodejs npm; }
+	@command -v wails >/dev/null 2>&1 || { echo "Installing Wails..."; go install github.com/wailsapp/wails/v2/cmd/wails@latest; export PATH=$$PATH:$$HOME/go/bin; }
+	@echo "Checking Linux specific dependencies for Wails..."
+	@dpkg -s libgtk-3-dev >/dev/null 2>&1 || { echo "Installing GTK3..."; sudo apt-get install -y libgtk-3-dev; }
+	@dpkg -s libwebkit2gtk-4.1-dev >/dev/null 2>&1 || { echo "Installing WebKit2GTK..."; sudo apt-get install -y libwebkit2gtk-4.1-dev; }
 	@echo "Downloading Client Go modules..."
 	cd client && go mod download
 	@echo "Installing Client Frontend dependencies..."
