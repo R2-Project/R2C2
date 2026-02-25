@@ -21,7 +21,7 @@ check-deps:
 	@command -v wails >/dev/null 2>&1 || { echo "Installing Wails..."; go install github.com/wailsapp/wails/v2/cmd/wails@latest; export PATH=$$PATH:$$HOME/go/bin; }
 	@echo "Checking Linux specific dependencies for Wails..."
 	@dpkg -s libgtk-3-dev >/dev/null 2>&1 || { echo "Installing GTK3..."; sudo apt-get install -y libgtk-3-dev; }
-	@dpkg -s libwebkit2gtk-4.0-dev >/dev/null 2>&1 || { echo "Installing WebKit2GTK..."; sudo apt-get install -y libwebkit2gtk-4.0-dev; }
+	@dpkg -s libwebkit2gtk-4.1-dev >/dev/null 2>&1 || { echo "Installing WebKit2GTK..."; sudo apt-get install -y libwebkit2gtk-4.1-dev; }
 
 
 server: check-deps deps-server deps-implant
