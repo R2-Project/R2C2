@@ -27,7 +27,7 @@ server: check-deps deps-server deps-implant
 
 client: check-deps deps-client
 	@echo "Building Client..."
-	export PATH=$$PATH:$$(go env GOPATH)/bin && cd client && wails build -tags webkit2_41
+	export PATH=$$PATH:$$HOME/go/bin && cd client && wails build tags -tags webkit2_41
 
 deps-server:
 	@echo "Downloading Server Go modules..."
