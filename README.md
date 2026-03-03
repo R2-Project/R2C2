@@ -48,8 +48,9 @@ This will be implemented in future releases.
 
 - **Installation**
   - [Teamserver](docs/01-Installation/Teamserver.md)
+  - [Client](docs/01-Installation/Client.md)
 
 
-## ⚖️ Legal Disclaimer
+# ⚖️ Legal Disclaimer
 
 This project is intended for **educational purposes** and **authorized security testing** only. The developers are not responsible for any misuse of this software. Ensure you have explicit permission from the system owner before running this on any network or device.

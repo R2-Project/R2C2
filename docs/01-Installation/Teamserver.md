@@ -46,7 +46,7 @@ The server requires a YAML configuration file.
 Execute the server binary from the project root, specifying the configuration file:
 
 ```bash
-./bin/server --start --config config.yaml
+./bin/teamserver --start --config config.yaml
 ```
 
 If successful, the server will start listening on the address defined in your config (default: `0.0.0.0:8080`).
