@@ -16,13 +16,13 @@ help:
 check-deps:
 	@echo "Checking system dependencies..."
 	sudo apt-get install libc6-dev
-	sudo apt-get install gcc-multili
+	sudo apt-get install gcc-multilib
 	@command -v go >/dev/null 2>&1 || { echo "Installing Go..."; sudo apt-get update && sudo apt-get install -y golang-go; }
 	@command -v cargo >/dev/null 2>&1 || { echo "Installing Rust..."; curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y; source $$HOME/.cargo/env; }
 
 server: check-deps deps-server deps-implant
 	@echo "Building Server..."
-	cd server && go build -o ../bin/server ./cmd/main.go
+	cd server && go build -o ../bin/teamserver ./cmd/main.go
 	@echo "[+] Server built at bin/server"
 
 client: check-deps deps-client
