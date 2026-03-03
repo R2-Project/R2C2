@@ -47,11 +47,7 @@ This will be implemented in future releases.
 ## 📚 Documentation
 
 - **Installation**
-  - [Quickstart](docs/01-Installation/Quickstart.md)
-  - [Manual Installation](docs/01-Installation/Manual.md)
-- **Client Guide**
-  - [Login](docs/02-Client/Login.md)
-  - [Creating Listeners](docs/02-Client/Create-listener.md)
+  - [Teamserver](docs/01-Installation/Teamserver.md)
 
 
 ## ⚖️ Legal Disclaimer
