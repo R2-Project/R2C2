@@ -23,11 +23,11 @@ check-deps:
 server: check-deps deps-server deps-implant
 	@echo "Building Server..."
 	cd server && go build -o ../bin/teamserver ./cmd/main.go
-	@echo "[+] Server built at bin/server"
+	@echo "[+] Server built at bin/teamserver"
 
 client: check-deps deps-client
 	@echo "Building Client..."
-	cd client && wails build
+	export PATH=$$PATH:$$(go env GOPATH)/bin && cd client && wails build -tags webkit2_41
 
 deps-server:
 	@echo "Downloading Server Go modules..."
@@ -35,7 +35,7 @@ deps-server:
 
 deps-client:
 	@command -v npm >/dev/null 2>&1 || { echo "Installing Node.js/NPM..."; sudo apt-get install -y nodejs npm; }
-	@command -v wails >/dev/null 2>&1 || { echo "Installing Wails..."; go install github.com/wailsapp/wails/v2/cmd/wails@latest; export PATH=$$PATH:$$HOME/go/bin; }
+	@command -v wails >/dev/null 2>&1 || { echo "Installing Wails..."; go install github.com/wailsapp/wails/v2/cmd/wails@latest; }
 	@echo "Checking Linux specific dependencies for Wails..."
 	@dpkg -s libgtk-3-dev >/dev/null 2>&1 || { echo "Installing GTK3..."; sudo apt-get install -y libgtk-3-dev; }
 	@dpkg -s libwebkit2gtk-4.1-dev >/dev/null 2>&1 || { echo "Installing WebKit2GTK..."; sudo apt-get install -y libwebkit2gtk-4.1-dev; }
