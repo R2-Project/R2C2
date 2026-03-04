@@ -1,6 +1,6 @@
 use super::Transport;
+use crate::beacon::Beacon;
 use crate::tasks::Task;
-use crate::Beacon;
 use reqwest;
 use serde::Serialize;
 use std::error::Error;

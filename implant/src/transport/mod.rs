@@ -1,5 +1,5 @@
+use crate::beacon::Beacon;
 use crate::tasks::Task;
-use crate::Beacon;
 use serde::Serialize;
 use std::error::Error;
 
