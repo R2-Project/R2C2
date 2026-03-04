@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 type NewAgentRequest struct {
@@ -64,7 +65,14 @@ func (a *Agent) Build() (*string, error) {
 		implantDir = "../implant"
 	}
 
-	cmd := exec.Command("cargo", "build", "--features", "http", "--release", "--target", target)
+	features := []string{"http"}
+	if a.Format == ".dll" {
+		features = append(features, "dll")
+	}
+
+	featuresStr := strings.Join(features, ",")
+
+	cmd := exec.Command("cargo", "build", "--features", featuresStr, "--release", "--target", target)
 
 	cmd.Env = append(os.Environ(),
 		"LISTENER_ADDRESS="+a.Listener,

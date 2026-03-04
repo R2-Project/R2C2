@@ -1,5 +1,5 @@
+use crate::beacon::Beacon;
 use crate::commands;
-use crate::Beacon;
 use serde::Deserialize;
 use serde::Serialize;
 use std::collections::VecDeque;

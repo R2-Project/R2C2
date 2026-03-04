@@ -19,6 +19,7 @@ image = "0.24.6"
 [features]
 default = ["http"] 
 http = []
+dll = []
 
 [profile.release]
 opt-level = "z"
@@ -26,3 +27,6 @@ lto = "fat"
 strip = "symbols"
 debug = 0
 split-debuginfo = "off"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
