@@ -65,19 +65,32 @@ func (a *Agent) Build() (*string, error) {
 		implantDir = "../implant"
 	}
 
+	environ := []string{
+		"LISTENER_ADDRESS=" + a.Listener,
+		"SESSION_ID=" + a.Id,
+	}
+
+	args := []string{
+		"build",
+		"--release",
+		"--target",
+		target,
+	}
+
 	features := []string{"http"}
 	if a.Format == ".dll" {
 		features = append(features, "dll")
+		args = append(args, "--lib")
 	}
-
 	featuresStr := strings.Join(features, ",")
 
-	cmd := exec.Command("cargo", "build", "--features", featuresStr, "--release", "--target", target)
+	args = append(args, "--features", featuresStr)
 
-	cmd.Env = append(os.Environ(),
-		"LISTENER_ADDRESS="+a.Listener,
-		"SESSION_ID="+a.Id,
-	)
+	cmd := exec.Command("cargo", args...)
+
+	fmt.Println("CMD: " + cmd.String())
+
+	cmd.Env = append(os.Environ(), environ...)
 	cmd.Dir = implantDir
 
 	if output, err := cmd.CombinedOutput(); err != nil {
