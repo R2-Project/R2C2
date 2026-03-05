@@ -88,8 +88,6 @@ func (a *Agent) Build() (*string, error) {
 
 	cmd := exec.Command("cargo", args...)
 
-	fmt.Println("CMD: " + cmd.String())
-
 	cmd.Env = append(os.Environ(), environ...)
 	cmd.Dir = implantDir
 
