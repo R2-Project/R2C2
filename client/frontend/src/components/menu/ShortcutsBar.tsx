@@ -6,7 +6,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import R2C2Icon from '@/assets/images/r2c2-4.png'
+import R2C2Icon from '@/assets/images/r2-logo.png'
 
 export type ShortcutItem = {
   id: string

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import * as ScrollArea from "@radix-ui/react-scroll-area";
-import R2C2Icon from '@/assets/images/r2c2-4.png';
+import R2C2Icon from '@/assets/images/r2-logo.png';
 import { ApiRequest } from "@/lib/api";
 import { Loader2, Send } from "lucide-react";import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';

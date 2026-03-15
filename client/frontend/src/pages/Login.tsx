@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/global/hooks/use-toast";
-import R2C2Logo from "@/assets/images/r2c2-logo-text.png";
+import R2C2Logo from "@/assets/images/r2-logo.png";
 import { useAuth } from "@/global/hooks/useAuth";
 import { Login as AppLogin } from '../../wailsjs/go/main/App';
 
