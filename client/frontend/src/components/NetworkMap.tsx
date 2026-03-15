@@ -15,7 +15,7 @@ import {
   Node
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import R2C2Icon from '@/assets/images/r2c2-4.png';
+import R2C2Icon from '@/assets/images/r2-logo.png';
 import { Monitor } from 'lucide-react';
 import {
   ContextMenu,

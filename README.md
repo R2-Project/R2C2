@@ -1,7 +1,7 @@
 <div align="center">
-  <img src="client/frontend/src/assets/images/r2c2-logo-text.png" alt="R2C2 Logo" width="600"/>
+  <img src="client/frontend/src/assets/images/banner.png" alt="R2C2 Logo" width="600"/>
 
-  <h1>R2C2</h1>
+  <h1>R2 Framework</h1>
 
   <p>
     <strong>A modern AI assisted post explotation framework for red team operations.</strong>
@@ -21,7 +21,7 @@
 
 ## 📖 Description
 
-R2C2 is a cutting-edge Command and Control (C2) framework engineered for sophisticated red team engagements and adversary simulation. By combining the concurrency of Go for the Teamserver, the performance and safety of Rust for the Implant, and the flexibility of React + Wails for the Client, R2C2 provides a powerful, seamless experience for operators.
+R2 Framework is a modern Command and Control (C2) framework engineered for sophisticated red team engagements and adversary simulation. By combining the concurrency of Go for the Teamserver, the performance and safety of Rust for the Implant, and the flexibility of React + Wails for the Client, R2C2 provides a powerful, seamless experience for operators.
 
 
 <div align="center">
