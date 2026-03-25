@@ -25,7 +25,7 @@ R2 Framework is a modern Command and Control (C2) framework engineered for sophi
 
 
 <div align="center">
-  <img src="docs/assets/r2c2.jpeg" alt="R2C2 Client" width="600" style="border-radius: 10px;"/>
+  <img src="docs/assets/r2.png" alt="R2C2 Client" width="600" style="border-radius: 10px;"/>
 </div>
 
 > **⚠️ Disclaimer**: At this moment, the project is not intended to be stealthy, and no evasion techniques have been applied yet.
