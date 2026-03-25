@@ -1,0 +1,83 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build & Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ─── Go & Node ───────────────────────────────────────────────────────────
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # ─── System deps required by Wails (webkit2_41 tag) ──────────────────────
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgtk-3-dev \
+            libwebkit2gtk-4.1-dev
+
+      # ─── Wails CLI ───────────────────────────────────────────────────────────
+      - name: Install Wails
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.10.2
+
+      # ─── Build server ────────────────────────────────────────────────────────
+      - name: Build teamserver
+        run: |
+          cd server
+          go mod download
+          go build -o ../r2-teamserver ./cmd/main.go
+
+      # ─── Build client ────────────────────────────────────────────────────────
+      - name: Install client frontend dependencies
+        run: cd client/frontend && npm install
+
+      - name: Build client
+        run: |
+          cd client
+          go mod download
+          wails build -tags webkit2_41
+
+      # ─── Prepare release artefacts ───────────────────────────────────────────
+      - name: Prepare release artefacts
+        run: |
+          TAG="${{ github.ref_name }}"
+
+          # Rename client binary to r2c2
+          cp client/build/bin/R2C2 r2c2
+
+          # Use the template as the default config
+          cp config.yaml.tpl config.yaml
+
+          # Bundle everything into a single tarball
+          tar -czf "r2c2-${TAG}-linux-amd64.tar.gz" \
+            r2-teamserver \
+            r2c2 \
+            config.yaml
+
+      # ─── Create GitHub release & upload tarball ───────────────────────────────
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "R2C2 ${{ github.ref_name }}"
+          generate_release_notes: true
+          files: r2c2-${{ github.ref_name }}-linux-amd64.tar.gz
