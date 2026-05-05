@@ -60,9 +60,12 @@ export default function NewListener({ open, onOpenChange, onCreated }: Props) {
 
     setLoading(true)
     try {
-      const serverUrl = localStorage.getItem("serverUrl");
+      let serverUrl = localStorage.getItem("serverUrl");
       if (!serverUrl) {
         throw new Error("Server URL not found");
+      }
+      if (!serverUrl.includes("http")) {
+        serverUrl = `http://${serverUrl}`;
       }
 
       const payload = {

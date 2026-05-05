@@ -2,6 +2,7 @@ package agents
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -102,10 +103,22 @@ func (a *Agent) Build() (*string, error) {
 		return nil, err
 	}
 
-	err = os.Rename(binaryPath, "/tmp/payloads/"+a.Name+a.Format)
+	destPath := "/tmp/payloads/" + a.Name + a.Format
+	src, err := os.Open(binaryPath)
 	if err != nil {
 		return nil, err
 	}
+	defer src.Close()
+	dst, err := os.Create(destPath)
+	if err != nil {
+		return nil, err
+	}
+	defer dst.Close()
+	if _, err = io.Copy(dst, src); err != nil {
+		return nil, err
+	}
+	src.Close()
+	os.Remove(binaryPath)
 
 	agent := a.Name + a.Format
 

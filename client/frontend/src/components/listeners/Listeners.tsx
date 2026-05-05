@@ -20,7 +20,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Trash } from "lucide-react"
+import { MoreHorizontal, Plus, Trash } from "lucide-react"
 // import { getListeners, Listener } from "@/services/listeners"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -148,13 +148,20 @@ export default function Listeners({ onAddView }: Props) {
       return (
         <div className="p-6 text-center">
           <div className="mb-2 text-sm">No listeners are running.</div>
-          <Button onClick={load}>Refresh</Button>
+          <Button onClick={() => setIsNewListenerOpen(true)}>
+            <Plus className="mr-1 h-4 w-4" />New Listener
+          </Button>
         </div>
       )
     }
 
     return (
       <div className="">
+        <div className="flex justify-end px-2 py-1">
+          <Button size="sm" onClick={() => setIsNewListenerOpen(true)}>
+            <Plus className="mr-1 h-4 w-4" />New Listener
+          </Button>
+        </div>
         <Table>
           <TableHeader>
             <TableRow>

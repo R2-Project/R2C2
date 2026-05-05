@@ -12,7 +12,7 @@ The project comes with a helper to install all necessary dependencies, including
 make check-deps
 ```
 
-*Ensure you have `sudo` privileges as system packages will need to be installed.*
+*`check-deps` will attempt to install missing packages using `sudo` if available. If running without root privileges, ensure dependencies are already installed.*
 
 ## Building the Client
 

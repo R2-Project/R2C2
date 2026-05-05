@@ -12,7 +12,7 @@ The project includes a helper to check and install necessary dependencies (Go, R
 make check-deps
 ```
 
-*Ensure you have `sudo` privileges if dependencies need to be installed.*
+*`check-deps` will attempt to install missing packages using `sudo` if available. If `sudo` is not present, it will skip installation of already-present packages gracefully.*
 
 ## Building the Server
 
@@ -46,6 +46,18 @@ The server requires a YAML configuration file.
 Execute the server binary from the project root, specifying the configuration file:
 
 ```bash
+./bin/teamserver --start --config config.yaml
+```
+
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `IMPLANT_SOURCE_PATH` | Absolute path to the `implant/` directory. Required if the server's working directory differs from the project root. | `../implant` (relative) |
+
+Example:
+```bash
+export IMPLANT_SOURCE_PATH=/path/to/R2C2/implant
 ./bin/teamserver --start --config config.yaml
 ```
 

@@ -1,3 +1,6 @@
+SHELL := /bin/bash
+export PATH := /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$(HOME)/go/bin:$(HOME)/.cargo/bin:$(PATH)
+
 .PHONY: all server client implant deps-server deps-client deps-implant clean help check-deps
 
 all: check-deps server client implant
@@ -15,9 +18,10 @@ help:
 
 check-deps:
 	@echo "Checking system dependencies..."
-	sudo apt-get install libc6-dev
-	sudo apt-get install gcc-multilib
-	@command -v go >/dev/null 2>&1 || { echo "Installing Go..."; sudo apt-get update && sudo apt-get install -y golang-go; }
+	@SUDO=$$(command -v sudo 2>/dev/null || echo ""); \
+	dpkg -s libc6-dev >/dev/null 2>&1 || { echo "Installing libc6-dev..."; $$SUDO apt-get install -y libc6-dev; }; \
+	dpkg -s gcc-multilib >/dev/null 2>&1 || { echo "Installing gcc-multilib..."; $$SUDO apt-get install -y gcc-multilib; }
+	@command -v go >/dev/null 2>&1 || { echo "Installing Go..."; SUDO=$$(command -v sudo 2>/dev/null || echo ""); $$SUDO apt-get update && $$SUDO apt-get install -y golang-go; }
 	@command -v cargo >/dev/null 2>&1 || { echo "Installing Rust..."; curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y; source $$HOME/.cargo/env; }
 
 server: check-deps deps-server deps-implant
@@ -27,7 +31,7 @@ server: check-deps deps-server deps-implant
 
 client: check-deps deps-client
 	@echo "Building Client..."
-	export PATH=$$PATH:$$HOME/go/bin && cd client && wails build tags -tags webkit2_41
+	export PATH=$$PATH:/usr/bin:/usr/local/bin:$$HOME/go/bin && cd client && wails build -tags webkit2_41
 
 deps-server:
 	@echo "Downloading Server Go modules..."
