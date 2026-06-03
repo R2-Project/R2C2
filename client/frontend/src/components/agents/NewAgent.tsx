@@ -29,6 +29,27 @@ export default function NewAgent({ open, onOpenChange, onCreated }: Props) {
   const [listenerId, setListenerId] = useState("")
   const [listeners, setListeners] = useState<any[]>([])
   const [format, setFormat] = useState(".exe")
+
+  const formatOptions: Record<string, { value: string; label: string }[]> = {
+    windows: [
+      { value: ".exe", label: "Executable (.exe)" },
+      { value: ".dll", label: "DLL (.dll)" },
+    ],
+    macos: [
+      { value: "native", label: "Executable (native)" },
+      { value: ".dylib", label: "Dynamic Library (.dylib)" },
+    ],
+    linux: [
+      { value: "native", label: "Executable (native)" },
+      { value: ".so",    label: "Shared Object (.so)" },
+    ],
+  }
+
+  function handleOsChange(value: string) {
+    setOs(value)
+    setFormat(formatOptions[value]?.[0]?.value ?? ".exe")
+    if (value === "windows") setArch("x64")
+  }
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -212,14 +233,14 @@ export default function NewAgent({ open, onOpenChange, onCreated }: Props) {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Operating System</Label>
-              <Select value={os} onValueChange={setOs}>
+              <Select value={os} onValueChange={handleOsChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select OS" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="windows">Windows</SelectItem>
-                  <SelectItem value="linux" disabled>Linux</SelectItem>
-                  <SelectItem value="macos" disabled>macOS</SelectItem>
+                  <SelectItem value="linux">Linux</SelectItem>
+                  <SelectItem value="macos">macOS</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -232,8 +253,8 @@ export default function NewAgent({ open, onOpenChange, onCreated }: Props) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="x64">x64</SelectItem>
-                  <SelectItem value="x86" disabled>x86</SelectItem>
-                  <SelectItem value="arm64" disabled>ARM64</SelectItem>
+                  <SelectItem value="x86" disabled={os !== "windows"}>x86</SelectItem>
+                  <SelectItem value="arm64" disabled={os === "windows"}>ARM64</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -260,8 +281,9 @@ export default function NewAgent({ open, onOpenChange, onCreated }: Props) {
                 <SelectValue placeholder="Select Format" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value=".exe">Executable (.exe)</SelectItem>
-                <SelectItem value=".dll">DLL</SelectItem>
+                {formatOptions[os]?.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

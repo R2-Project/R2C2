@@ -12,6 +12,7 @@ import (
 type NewAgentRequest struct {
 	Name     string `json:"name"`
 	Listener string `json:"listener"`
+	OS       string `json:"os"`
 	Arch     string `json:"arch"`
 	Format   string `json:"format"`
 }
@@ -33,6 +34,7 @@ type Agent struct {
 	Name     string `json:"name"`
 	Listener string `json:"listener"`
 	Status   string `json:"status"`
+	OS       string `json:"os"`
 	Arch     string `json:"arch"`
 	Format   string `json:"format"`
 	// Sleep and jitter?
@@ -53,16 +55,66 @@ type Agent struct {
 	// Uris      []string `json:"uris"`
 }
 
-// TODO:
-// will fix this later to make it malleable
-// for now just need to automate the build process
-func (a *Agent) Build() (*string, error) {
+// resolveTarget maps OS + Arch to a Rust target triple.
+func resolveTarget(os, arch string) (string, error) {
+	targets := map[string]map[string]string{
+		"windows": {
+			"x64": "x86_64-pc-windows-gnu",
+			"x86": "i686-pc-windows-gnu",
+		},
+		"macos": {
+			"x64":   "x86_64-apple-darwin",
+			"arm64": "aarch64-apple-darwin",
+		},
+		"linux": {
+			"x64":   "x86_64-unknown-linux-gnu",
+			"arm64": "aarch64-unknown-linux-gnu",
+		},
+	}
 
-	target := "x86_64-pc-windows-gnu"
+	archMap, ok := targets[os]
+	if !ok {
+		return "", fmt.Errorf("unsupported OS: %s", os)
+	}
+	target, ok := archMap[arch]
+	if !ok {
+		return "", fmt.Errorf("unsupported arch %s for OS %s", arch, os)
+	}
+	return target, nil
+}
+
+// outputBinaryName returns the cargo output filename for a given format.
+// "native" means a plain Unix binary with no extension.
+func outputBinaryName(format string) string {
+	switch format {
+	case ".dylib":
+		return "libimplant.dylib"
+	case ".so":
+		return "libimplant.so"
+	case "native":
+		return "implant"
+	default:
+		return "implant" + format
+	}
+}
+
+// destExtension returns the file extension (or empty string) to append to the
+// agent name when storing the payload on disk.
+func destExtension(format string) string {
+	if format == "native" {
+		return ""
+	}
+	return format
+}
+
+func (a *Agent) Build() (*string, error) {
+	target, err := resolveTarget(a.OS, a.Arch)
+	if err != nil {
+		return nil, err
+	}
 
 	implantDir := os.Getenv("IMPLANT_SOURCE_PATH")
 	if implantDir == "" {
-		// for test
 		implantDir = "../implant"
 	}
 
@@ -79,16 +131,14 @@ func (a *Agent) Build() (*string, error) {
 	}
 
 	features := []string{"http"}
-	if a.Format == ".dll" {
+	switch a.Format {
+	case ".dll", ".dylib", ".so":
 		features = append(features, "dll")
 		args = append(args, "--lib")
 	}
-	featuresStr := strings.Join(features, ",")
-
-	args = append(args, "--features", featuresStr)
+	args = append(args, "--features", strings.Join(features, ","))
 
 	cmd := exec.Command("cargo", args...)
-
 	cmd.Env = append(os.Environ(), environ...)
 	cmd.Dir = implantDir
 
@@ -96,31 +146,33 @@ func (a *Agent) Build() (*string, error) {
 		return nil, fmt.Errorf("compilation failed out: %s - err: %w", string(output), err)
 	}
 
-	binaryPath := filepath.Join(implantDir, "target", target, "release", "implant"+a.Format)
+	binaryPath := filepath.Join(implantDir, "target", target, "release", outputBinaryName(a.Format))
 
-	err := os.MkdirAll("/tmp/payloads", os.ModePerm)
-	if err != nil {
+	if err := os.MkdirAll("/tmp/payloads", os.ModePerm); err != nil {
 		return nil, err
 	}
 
-	destPath := "/tmp/payloads/" + a.Name + a.Format
+	ext := destExtension(a.Format)
+	destPath := "/tmp/payloads/" + a.Name + ext
+
 	src, err := os.Open(binaryPath)
 	if err != nil {
 		return nil, err
 	}
 	defer src.Close()
+
 	dst, err := os.Create(destPath)
 	if err != nil {
 		return nil, err
 	}
 	defer dst.Close()
+
 	if _, err = io.Copy(dst, src); err != nil {
 		return nil, err
 	}
 	src.Close()
 	os.Remove(binaryPath)
 
-	agent := a.Name + a.Format
-
+	agent := a.Name + ext
 	return &agent, nil
 }

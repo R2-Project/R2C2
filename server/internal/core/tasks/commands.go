@@ -17,7 +17,7 @@ type CommandDefinition struct {
 var CommandsRegistry = []CommandDefinition{
 	{
 		Name:        "shell",
-		Description: "Executes cmd.exe command",
+		Description: "Executes a shell command (cmd.exe on Windows, sh on macOS/Linux)",
 		Usage:       "shell <command>",
 		Args: []CommandArg{
 			{

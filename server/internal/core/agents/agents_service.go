@@ -25,7 +25,14 @@ func (as *AgentsService) CreateAgent(data NewAgentRequest) (*string, error) {
 		return nil, ErrInvalidAgentName
 	}
 
-	if data.Format != ".exe" && data.Format != ".dll" {
+	validFormats := map[string]bool{
+		".exe":   true,
+		".dll":   true,
+		"native": true, // plain Unix binary (no extension)
+		".dylib": true,
+		".so":    true,
+	}
+	if !validFormats[data.Format] {
 		return nil, ErrInvalidAgentFormat
 	}
 
@@ -35,6 +42,7 @@ func (as *AgentsService) CreateAgent(data NewAgentRequest) (*string, error) {
 		Name:      data.Name,
 		Listener:  data.Listener,
 		Status:    "inactive",
+		OS:        data.OS,
 		Arch:      data.Arch,
 		Format:    data.Format,
 		Timestamp: time.Now().Unix(),
