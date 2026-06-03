@@ -40,3 +40,5 @@ ENV GIN_MODE=release
 ENV IMPLANT_SOURCE_PATH=/app/implant
 
 ENTRYPOINT ["./teamserver", "server", "--start", "--config", "./config.yaml"]
+
+
